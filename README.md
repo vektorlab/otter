@@ -44,3 +44,10 @@ container workload from a container orchestration tool.
 
 Otter provides inventory and host OS monitoring
 
+## Installation
+
+    git clone git@github.com/vektorlab/otter.git
+    cd otter
+    go install
+    otter --state=example/otter.yml ls |jq .
+
