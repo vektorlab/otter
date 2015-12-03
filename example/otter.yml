@@ -1,0 +1,13 @@
+docker:
+  file.rendered:
+    mode: 644
+    path: /root/cool.txt
+    source: git:///git@github.com/vektorlab/otter/file-1.txt
+  package.installed:
+    version: "1.8"
+  service.running:
+Really Great File:
+  file.rendered:
+    source: git:///git@github.com/vektorlab/otter/file-2.txt
+    require:
+      - docker

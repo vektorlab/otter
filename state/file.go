@@ -1,0 +1,79 @@
+/*
+A File represents a single file on an operating system.
+States -
+  rendered: A file is copied from a another source // TODO
+  deleted: A file is removed from the operating system // TODO
+  linked: A symbolic link is created from one destination to another // TODO
+
+Source Types -
+  git: A file is copied from a Git repository // TODO
+  s3: A file is copied from an Amazon S3 repo // TODO
+  file: A file is copied from the local file system // TODO
+*/
+
+package state
+
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+)
+
+type SourceType string
+
+type FileType string
+
+type File struct {
+	Mode       int64      `mapstructure:"mode"`   // File should be set to this octal mode
+	Path       string     `mapstructure:"path"`   // File destination
+	Source     string     `mapstructure:"source"` // File source
+	SourceType SourceType `mapstructure:"-"`      // SourceType e.g. git, filesystem, s3
+	Metadata   Metadata   `mapstructure:"-"`
+	Require    []string   `mapstructure:"require"`
+}
+
+/*
+Determine the "source type" of a file's content based on it's path prefix
+*/
+func (file *File) SetSourceType(field string) (SourceType, error) {
+	switch {
+	case strings.Contains(field, "git:///"):
+		return SourceType("git"), nil
+	case strings.Contains(field, "file:///"):
+		return SourceType("filesystem"), nil
+	case strings.Contains(field, "s3:///"):
+		return SourceType("s3"), nil
+	default:
+		return SourceType(""), fmt.Errorf("Unable to parse source type: %s", field)
+	}
+}
+
+func (file *File) validateState() error {
+	switch file.Metadata.State {
+	case "rendered":
+		return nil
+	default:
+		return fmt.Errorf("")
+	}
+}
+
+func (file *File) Initialize() error {
+	var err error
+	file.SourceType, err = file.SetSourceType(file.Source)
+	if file.Path == "" {
+		file.Path = file.Metadata.Name
+	}
+	return err
+}
+
+func (file *File) Dump() ([]byte, error) {
+	return json.Marshal(file)
+}
+
+func (file *File) Requirements() []string {
+	return file.Require
+}
+
+func (file *File) Meta() Metadata {
+	return file.Metadata
+}
