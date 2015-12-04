@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"github.com/mitchellh/mapstructure"
 )
 
 type SourceType string
@@ -76,4 +77,24 @@ func (file *File) Requirements() []string {
 
 func (file *File) Meta() Metadata {
 	return file.Metadata
+}
+
+func FileFromStructure(metadata Metadata, structure interface{}) (*File, error) {
+	var err error
+
+	file := File{
+		Metadata: metadata,
+	}
+
+	err = mapstructure.Decode(structure, &file)
+	if err != nil {
+		return nil, err
+	}
+
+	err = file.Initialize()
+	if err != nil {
+		return nil, err
+	}
+
+	return &file, nil
 }

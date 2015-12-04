@@ -8,8 +8,9 @@ States -
 package state
 
 import (
-	"encoding/json"
 	"fmt"
+	"encoding/json"
+	"github.com/mitchellh/mapstructure"
 )
 
 type Service struct {
@@ -47,4 +48,24 @@ func (service *Service) Requirements() []string {
 
 func (service *Service) Meta() Metadata {
 	return service.Metadata
+}
+
+func ServiceFromStructure(metadata Metadata, structure interface{}) (*Service, error) {
+	var err error
+
+	service := Service{
+		Metadata: metadata,
+	}
+
+	err = mapstructure.Decode(structure, &service)
+	if err != nil {
+		return nil, err
+	}
+
+	err = service.Initialize()
+	if err != nil {
+		return nil, err
+	}
+
+	return &service, nil
 }

@@ -10,6 +10,7 @@ package state
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 )
 
 type Package struct {
@@ -47,4 +48,24 @@ func (pkg *Package) Requirements() []string {
 
 func (pkg *Package) Meta() Metadata {
 	return pkg.Metadata
+}
+
+func PackageFromStructure(metadata Metadata, structure interface{}) (*Package, error) {
+	var err error
+
+	pkg := Package{
+		Metadata: metadata,
+	}
+
+	err = mapstructure.Decode(structure, &pkg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = pkg.Initialize()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pkg, nil
 }

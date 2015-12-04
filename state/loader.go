@@ -16,7 +16,6 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
@@ -48,50 +47,25 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 	metadata := Metadata{name, split[0], split[1]}
 	switch split[0] {
 	case "file":
-		var err error
-		file := File{
-			Metadata: metadata,
-		}
-		err = mapstructure.Decode(data, &file)
+		file, err := FileFromStructure(metadata, data)
 		if err != nil {
 			return err
 		}
-		err = file.Initialize()
-		if err != nil {
-			return err
-		}
-		loader.State[name] = append(loader.State[name], &file)
-		//loader.state[name] = &file
+		loader.State[name] = append(loader.State[name], file)
 		return nil
 	case "package":
-		var err error
-		pkg := Package{
-			Metadata: metadata,
-		}
-		err = mapstructure.Decode(data, &pkg)
+		pkg, err := PackageFromStructure(metadata, data)
 		if err != nil {
 			return err
 		}
-		err = pkg.Initialize()
-		if err != nil {
-			return err
-		}
-		loader.State[name] = append(loader.State[name], &pkg)
+		loader.State[name] = append(loader.State[name], pkg)
 		return nil
 	case "service":
-		var err error
-		service := Service{
-			Metadata: metadata,
-		}
-		err = mapstructure.Decode(data, &service)
+		service, err := ServiceFromStructure(metadata, data)
 		if err != nil {
 			return err
 		}
-		err = service.Initialize()
-		if err != nil {
-			return err
-		}
-		loader.State[name] = append(loader.State[name], &service)
+		loader.State[name] = append(loader.State[name], service)
 		return nil
 	default:
 		return fmt.Errorf("Unknown keyword %s", keyword)
