@@ -9,7 +9,7 @@ import (
 )
 
 type Service struct {
-	state state.Service
+	state *state.Service
 }
 
 func (service *Service) Consistent() (bool, error) {
@@ -24,10 +24,19 @@ func (service *Service) Execute() (Result, error) {
 	return Result{}, nil
 }
 
-func (service *Service) Load(data []byte) error {
-	service.state = state.Service{}
+func ServiceFromJson(data []byte) (*Service, error) {
+	service := Service{
+		state: &state.Service{},
+	}
 	err := json.Unmarshal(data, &service.state)
-	return err
+	return &service, err
+}
+
+func ServiceFromState(state *state.Service) (*Service, error) {
+	service := Service{
+		state: state,
+	}
+	return &service, nil
 }
 
 func SystemdUnitRunning(name string) (bool, error) {

@@ -7,7 +7,7 @@ import (
 )
 
 type File struct {
-	state state.File
+	state *state.File
 }
 
 func (file *File) Consistent() (bool, error) {
@@ -29,8 +29,17 @@ func (file *File) Execute() (Result, error) {
 	return Result{}, nil
 }
 
-func (file *File) Load(data []byte) error {
-	file.state = state.File{}
+func FileFromJson(data []byte) (*File, error) {
+	file := File{
+		state: &state.File{},
+	}
 	err := json.Unmarshal(data, &file.state)
-	return err
+	return &file, err
+}
+
+func FileFromState(state *state.File) (*File, error) {
+	file := File{
+		state: state,
+	}
+	return &file, nil
 }

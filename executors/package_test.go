@@ -8,8 +8,11 @@ import (
 var simplePkg = []byte(`{"Name": "docker-engine", "version": "1.9.1", "Metadata": {"Name": "docker", "Type": "package", "State": "installed"}}`)
 
 func TestPackage(t *testing.T) {
-	pkg := Package{}
-	pkg.Load(simplePkg)
+	pkg, err := PackageFromJson(simplePkg)
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
 	if pkg.state.Version != "1.9.1" {
 		fmt.Println("Unable to load package")
 		t.Fail()
@@ -17,8 +20,7 @@ func TestPackage(t *testing.T) {
 }
 
 func TestPackageConsistent(t *testing.T) {
-	pkg := Package{}
-	err := pkg.Load(simplePkg)
+	pkg, err := PackageFromJson(simplePkg)
 	if err != nil {
 		fmt.Println("Unable to load package: ", err)
 		t.Fail()

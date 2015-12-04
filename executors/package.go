@@ -1,16 +1,16 @@
 package executors
 
 import (
-	"fmt"
-	"os/exec"
-	"strings"
 	"encoding/json"
+	"fmt"
 	"github.com/vektorlab/otter/helpers"
 	"github.com/vektorlab/otter/state"
+	"os/exec"
+	"strings"
 )
 
 type Package struct {
-	state  state.Package
+	state  *state.Package
 	status string
 }
 
@@ -30,10 +30,19 @@ func (pkg *Package) Execute() (Result, error) {
 	return Result{}, nil
 }
 
-func (pkg *Package) Load(data []byte) error {
-	pkg.state = state.Package{}
+func PackageFromJson(data []byte) (*Package, error) {
+	pkg := Package{
+		state: &state.Package{},
+	}
 	err := json.Unmarshal(data, &pkg.state)
-	return err
+	return &pkg, err
+}
+
+func PackageFromState(state *state.Package) (*Package, error) {
+	pkg := Package{
+		state: state,
+	}
+	return &pkg, nil
 }
 
 func GetDpkgPackage(name string) (string, error) {
