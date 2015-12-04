@@ -37,7 +37,7 @@ type Metadata struct {
 
 type Loader struct {
 	stateRaw map[string]map[string]interface{}
-	state    map[string][]State
+	State    map[string][]State
 }
 
 /*
@@ -60,7 +60,7 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 		if err != nil {
 			return err
 		}
-		loader.state[name] = append(loader.state[name], &file)
+		loader.State[name] = append(loader.State[name], &file)
 		//loader.state[name] = &file
 		return nil
 	case "package":
@@ -76,7 +76,7 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 		if err != nil {
 			return err
 		}
-		loader.state[name] = append(loader.state[name], &pkg)
+		loader.State[name] = append(loader.State[name], &pkg)
 		return nil
 	case "service":
 		var err error
@@ -91,7 +91,7 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 		if err != nil {
 			return err
 		}
-		loader.state[name] = append(loader.state[name], &service)
+		loader.State[name] = append(loader.State[name], &service)
 		return nil
 	default:
 		return fmt.Errorf("Unknown keyword %s", keyword)
@@ -122,7 +122,15 @@ func (loader *Loader) UnmarshalYAML(unmarshal func(interface{}) error) error {
 Dump the entire state out to JSON
 */
 func (loader *Loader) Dump() ([]byte, error) {
-	return json.Marshal(loader.state)
+	return json.Marshal(loader.State)
+}
+
+func (loader *Loader) Count() int {
+	var count int
+	for _, value := range loader.State {
+		count += len(value)
+	}
+	return count
 }
 
 func (loader *Loader) requirements(entry []State) []string {
@@ -140,10 +148,10 @@ func (loader *Loader) requirements(entry []State) []string {
 Validate that all requirements in each state exist and that there are no circular requirements
 */
 func (loader *Loader) validate() error {
-	for name, entry := range loader.state {
+	for name, entry := range loader.State {
 		reqs := loader.requirements(entry)
 		for req := range reqs {
-			other, exists := loader.state[reqs[req]]
+			other, exists := loader.State[reqs[req]]
 			if !exists {
 				return fmt.Errorf("Unable to find requirement: %s", reqs[req])
 			}
@@ -163,7 +171,7 @@ func FromBytes(data []byte) (*Loader, error) {
 	var err error
 
 	loader := Loader{
-		state: make(map[string][]State),
+		State: make(map[string][]State),
 	}
 
 	err = yaml.Unmarshal(data, &loader)

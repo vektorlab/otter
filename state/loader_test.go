@@ -61,7 +61,7 @@ func TestFromBytes(t *testing.T) {
 			t.Fail()
 		}
 		fmt.Println(string(state))
-		rcf, _ := loader.state["Really Cool File"][0].Dump()
+		rcf, _ := loader.State["Really Cool File"][0].Dump()
 		file := File{}
 		json.Unmarshal(rcf, &file)
 		if file.Mode != 644 {
