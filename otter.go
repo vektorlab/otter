@@ -1,16 +1,41 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"github.com/vektorlab/otter/state"
 	"os"
+	"fmt"
+	"flag"
+	"github.com/vektorlab/otter/state"
+	"github.com/fatih/color"
+    "github.com/olekukonko/tablewriter"
 )
 
 var (
 	command string
 	file    string
+	dumpJson bool
 )
+
+var green = color.New(color.FgHiGreen).SprintFunc()
+var red = color.New(color.FgHiRed).SprintFunc()
+
+func dumpTable(loader *state.Loader) {
+	td := make([][]string, loader.Count())
+
+	for _, states := range (loader.State) {
+		for _, state := range states {
+			meta := state.Meta()
+			td = append(td, []string{green(meta.Name), green(meta.Type), green(meta.State)})
+		}
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+    table.SetHeader([]string{"Name", "Type", "State", "Consistent"})
+
+    for _, v := range td {
+        table.Append(v)
+    }
+    table.Render()
+}
 
 func usage(options []string) {
 	fmt.Println("Otter is an opinionated configuration management framework for servers that run containers\n")
@@ -32,6 +57,7 @@ func main() {
 	flag.NewFlagSet("Otter", flag.ExitOnError)
 	flag.StringVar(&command, "Command", "", "Otter command [ls]")
 	flag.StringVar(&file, "state", "otter.yml", "The path to an Otter state file")
+	flag.BoolVar(&dumpJson, "json", false, "Dump state output to JSON")
 
 	flag.Parse()
 	flag.Usage = func() { usage(options) }
@@ -47,7 +73,11 @@ func main() {
 		if err != nil {
 			fmt.Println("Problem dumping state")
 		}
-		fmt.Println(string(state))
+		if dumpJson {
+			fmt.Println(string(state))
+		} else {
+			dumpTable(loader)
+		}
 
 	default:
 		flag.Usage()
