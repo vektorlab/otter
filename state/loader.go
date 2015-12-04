@@ -37,6 +37,9 @@ type Metadata struct {
 type Loader struct {
 	stateRaw map[string]map[string]interface{}
 	State    map[string][]State
+	Files    []*File
+	Packages []*Package
+	Services []*Service
 }
 
 /*
@@ -52,6 +55,7 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 			return err
 		}
 		loader.State[name] = append(loader.State[name], file)
+		loader.Files = append(loader.Files, file)
 		return nil
 	case "package":
 		pkg, err := PackageFromStructure(metadata, data)
@@ -59,6 +63,7 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 			return err
 		}
 		loader.State[name] = append(loader.State[name], pkg)
+		loader.Packages = append(loader.Packages, pkg)
 		return nil
 	case "service":
 		service, err := ServiceFromStructure(metadata, data)
@@ -66,6 +71,7 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 			return err
 		}
 		loader.State[name] = append(loader.State[name], service)
+		loader.Services = append(loader.Services, service)
 		return nil
 	default:
 		return fmt.Errorf("Unknown keyword %s", keyword)
@@ -146,6 +152,9 @@ func FromBytes(data []byte) (*Loader, error) {
 
 	loader := Loader{
 		State: make(map[string][]State),
+		Files: []*File{},
+		Packages: []*Package{},
+		Services: []*Service{},
 	}
 
 	err = yaml.Unmarshal(data, &loader)
