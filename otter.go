@@ -1,40 +1,52 @@
 package main
 
 import (
-	"os"
-	"fmt"
 	"flag"
-	"github.com/vektorlab/otter/state"
+	"fmt"
 	"github.com/fatih/color"
-    "github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter"
+	"github.com/vektorlab/otter/executors"
+	"github.com/vektorlab/otter/state"
+	"os"
+	"strconv"
 )
 
 var (
-	command string
-	file    string
+	command  string
+	file     string
 	dumpJson bool
 )
 
-var green = color.New(color.FgHiGreen).SprintFunc()
-var red = color.New(color.FgHiRed).SprintFunc()
+func boolToColor(b bool) *color.Color {
+	if b {
+		return color.New(color.FgGreen)
+	} else {
+		return color.New(color.FgHiRed)
+	}
+}
 
-func dumpTable(loader *state.Loader) {
-	td := make([][]string, loader.Count())
+func dumpResults(executioner *executors.Executioner) {
 
-	for _, states := range (loader.State) {
-		for _, state := range states {
-			meta := state.Meta()
-			td = append(td, []string{green(meta.Name), green(meta.Type), green(meta.State)})
-		}
+	td := make([][]string, len(executioner.Executors))
+
+	for _, result := range executioner.Results {
+		c := boolToColor(result.Consistent).SprintfFunc()
+		td = append(td, []string{
+			c(result.Metadata.Name),
+			c(result.Metadata.Type),
+			c(result.Metadata.State),
+			c(strconv.FormatBool(result.Consistent)),
+			fmt.Sprint(result.Result),
+		})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-    table.SetHeader([]string{"Name", "Type", "State", "Consistent"})
+	table.SetHeader([]string{"Name", "Type", "State", "Consistent", "Result"})
 
-    for _, v := range td {
-        table.Append(v)
-    }
-    table.Render()
+	for _, v := range td {
+		table.Append(v)
+	}
+	table.Render()
 }
 
 func usage(options []string) {
@@ -49,35 +61,48 @@ func usage(options []string) {
 	}
 	fmt.Println("\nCommands:")
 	fmt.Println(" ls	Output the state from the Otter configuration file")
+	fmt.Println(" state	Show the state of your operating system")
 }
 
 func main() {
 
-	options := []string{"state"}
+	options := []string{"c"}
 	flag.NewFlagSet("Otter", flag.ExitOnError)
-	flag.StringVar(&command, "Command", "", "Otter command [ls]")
-	flag.StringVar(&file, "state", "otter.yml", "The path to an Otter state file")
+	flag.StringVar(&command, "Command", "", "Otter command [ls, state]")
+	flag.StringVar(&file, "c", "otter.yml", "The path to an Otter state file")
 	flag.BoolVar(&dumpJson, "json", false, "Dump state output to JSON")
 
 	flag.Parse()
 	flag.Usage = func() { usage(options) }
 
+	stateLoader, err := state.FromPath(file)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	switch flag.Arg(0) {
 	case "ls":
-		loader, err := state.FromPath(file)
+		out, err := stateLoader.Dump()
 		if err != nil {
-			fmt.Println("ERROR:", err)
+			fmt.Println(err)
 			os.Exit(1)
 		}
-		state, err := loader.Dump()
+		fmt.Println(string(out))
+	case "state":
+		executioner, err := executors.FromStateLoader(stateLoader)
 		if err != nil {
-			fmt.Println("Problem dumping state")
+			fmt.Println(err)
+			os.Exit(1)
 		}
-		if dumpJson {
-			fmt.Println(string(state))
-		} else {
-			dumpTable(loader)
+		err = executioner.Run()
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
+
+		dumpResults(executioner)
 
 	default:
 		flag.Usage()
