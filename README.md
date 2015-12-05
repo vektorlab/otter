@@ -49,5 +49,7 @@ Otter provides inventory and host OS monitoring
     git clone git@github.com/vektorlab/otter.git
     cd otter
     go install
-    otter --state=example/otter.yml ls |jq .
+    otter -c=example/otter.yml ls |jq .
+    otter -c=example/otter.yml state
+    
 

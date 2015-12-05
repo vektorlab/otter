@@ -1,13 +1,19 @@
-docker:
+docker-engine:
   file.rendered:
     mode: 644
-    path: /root/cool.txt
-    source: git:///git@github.com/vektorlab/otter/file-1.txt
+    path: /etc/default/docker
+    source: git:///git@github.com/vektorlab/otter/docker.txt
   package.installed:
-    version: "1.8"
+    version: "1.8.1"
   service.running:
-Really Great File:
-  file.rendered:
-    source: git:///git@github.com/vektorlab/otter/file-2.txt
+    name: docker
+mesos:
+  package.installed:
+    version: 0.2.5
     require:
-      - docker
+      - docker-engine
+marathon:
+  package.installed:
+    version: 0.13.0
+    require:
+      - mesos
