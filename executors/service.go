@@ -24,6 +24,10 @@ func (service *Service) Execute() (Result, error) {
 	return Result{}, nil
 }
 
+func (service *Service) Metadata() *state.Metadata {
+	return &service.state.Metadata
+}
+
 func ServiceFromJson(data []byte) (*Service, error) {
 	service := Service{
 		state: &state.Service{},

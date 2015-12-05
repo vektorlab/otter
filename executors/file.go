@@ -7,11 +7,14 @@ import (
 )
 
 type File struct {
-	state *state.File
+	state      *state.File
+	consistent bool
+	result     string
 }
 
 func (file *File) Consistent() (bool, error) {
 	var err error
+
 	if err != nil {
 		return false, err
 	}
@@ -27,6 +30,10 @@ func (file *File) Consistent() (bool, error) {
 
 func (file *File) Execute() (Result, error) {
 	return Result{}, nil
+}
+
+func (file *File) Metadata() *state.Metadata {
+	return &file.state.Metadata
 }
 
 func FileFromJson(data []byte) (*File, error) {

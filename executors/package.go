@@ -30,6 +30,10 @@ func (pkg *Package) Execute() (Result, error) {
 	return Result{}, nil
 }
 
+func (pkg *Package) Metadata() *state.Metadata {
+	return &pkg.state.Metadata
+}
+
 func PackageFromJson(data []byte) (*Package, error) {
 	pkg := Package{
 		state: &state.Package{},
