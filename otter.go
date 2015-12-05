@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
-	"github.com/vektorlab/otter/executors"
 	"github.com/vektorlab/otter/state"
 	"os"
 	"strconv"
@@ -25,18 +24,18 @@ func boolToColor(b bool) *color.Color {
 	}
 }
 
-func dumpResults(executioner *executors.Executioner) {
+func dumpResults(results []state.Result) {
 
-	td := make([][]string, len(executioner.Executors))
+	td := make([][]string, len(results))
 
-	for _, result := range executioner.Results {
+	for _, result := range results {
 		c := boolToColor(result.Consistent).SprintfFunc()
 		td = append(td, []string{
 			c(result.Metadata.Name),
 			c(result.Metadata.Type),
 			c(result.Metadata.State),
 			c(strconv.FormatBool(result.Consistent)),
-			fmt.Sprint(result.Result),
+			fmt.Sprint(result.Message),
 		})
 	}
 
@@ -90,19 +89,18 @@ func main() {
 		}
 		fmt.Println(string(out))
 	case "state":
-		executioner, err := executors.FromStateLoader(stateLoader)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		err = executioner.Run()
+		err = stateLoader.Run()
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		dumpResults(executioner)
+		dumpResults(stateLoader.Results)
 
 	default:
 		flag.Usage()

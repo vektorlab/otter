@@ -2,15 +2,14 @@ package helpers
 
 import (
 	"fmt"
-	"runtime"
 	"gopkg.in/ini.v1"
+	"runtime"
 )
 
-
 type Distro struct {
-	Family string // Major distribution type currently "debian" or "centos"
+	Family     string // Major distribution type currently "debian" or "centos"
 	InitSystem string // The Linux init system used by this operating system
-	Version string // Major version of the distribution // TODO
+	Version    string // Major version of the distribution // TODO
 }
 
 func (d *Distro) SetFamily(family string) error {

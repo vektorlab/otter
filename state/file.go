@@ -16,8 +16,9 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"github.com/mitchellh/mapstructure"
+	"os"
+	"strings"
 )
 
 type SourceType string
@@ -49,18 +50,16 @@ func (file *File) SetSourceType(field string) (SourceType, error) {
 	}
 }
 
-func (file *File) validateState() error {
-	switch file.Metadata.State {
-	case "rendered":
-		return nil
-	default:
-		return fmt.Errorf("")
-	}
-}
-
 func (file *File) Initialize() error {
 	var err error
 	file.SourceType, err = file.SetSourceType(file.Source)
+	if err != nil {
+		return err
+	}
+	state := file.Metadata.State
+	if state != "rendered" {
+		return fmt.Errorf("Invalid file state: %s", state)
+	}
 	if file.Path == "" {
 		file.Path = file.Metadata.Name
 	}
@@ -77,6 +76,26 @@ func (file *File) Requirements() []string {
 
 func (file *File) Meta() Metadata {
 	return file.Metadata
+}
+
+func (file *File) Consistent() (bool, error) {
+	var err error
+
+	if err != nil {
+		return false, err
+	}
+
+	f, err := os.Stat(file.Path)
+
+	if f == nil {
+		return false, err
+	}
+
+	return f != nil, nil
+}
+
+func (file *File) Execute() error {
+	return nil
 }
 
 func FileFromStructure(metadata Metadata, structure interface{}) (*File, error) {

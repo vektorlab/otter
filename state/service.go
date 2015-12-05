@@ -8,9 +8,10 @@ States -
 package state
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/vektorlab/otter/helpers"
 )
 
 type Service struct {
@@ -20,21 +21,26 @@ type Service struct {
 	Require  []string `mapstructure:"require"`
 }
 
-func (service *Service) validateState() error {
-	switch service.Metadata.State {
-	case "running":
-		return nil
-	case "stopped":
-		return nil
-	default:
-		return fmt.Errorf("Service state %s should be one of 'running' or 'stopped'", service.Metadata.State)
-	}
-}
-
 func (service *Service) Initialize() error {
 	if service.Name == "" {
 		service.Name = service.Metadata.Name
 	}
+	state := service.Metadata.State
+	if ! (state == "running" || state == "stopped") {
+		return fmt.Errorf("Invalid service state: %s", state)
+	}
+	return nil
+}
+
+func (service *Service) Consistent() (bool, error) {
+	running, err := helpers.ServiceRunning(service.Name)
+	if err != nil {
+		return false, err
+	}
+	return service.Running == running, nil
+}
+
+func (service *Service) Execute() error {
 	return nil
 }
 

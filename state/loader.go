@@ -22,10 +22,18 @@ import (
 )
 
 type State interface {
-	Initialize() error
+	Consistent() (bool, error)
 	Dump() ([]byte, error)
-	Requirements() []string
+	Execute() error
+	Initialize() error
 	Meta() Metadata
+	Requirements() []string
+}
+
+type Result struct {
+	Consistent bool
+	Metadata   *Metadata
+	Message    string
 }
 
 type Metadata struct {
@@ -37,9 +45,7 @@ type Metadata struct {
 type Loader struct {
 	stateRaw map[string]map[string]interface{}
 	State    map[string][]State
-	Files    []*File
-	Packages []*Package
-	Services []*Service
+	Results  []Result
 }
 
 /*
@@ -55,7 +61,6 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 			return err
 		}
 		loader.State[name] = append(loader.State[name], file)
-		loader.Files = append(loader.Files, file)
 		return nil
 	case "package":
 		pkg, err := PackageFromStructure(metadata, data)
@@ -63,7 +68,6 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 			return err
 		}
 		loader.State[name] = append(loader.State[name], pkg)
-		loader.Packages = append(loader.Packages, pkg)
 		return nil
 	case "service":
 		service, err := ServiceFromStructure(metadata, data)
@@ -71,7 +75,6 @@ func (loader *Loader) sectionToState(name, keyword string, data interface{}) err
 			return err
 		}
 		loader.State[name] = append(loader.State[name], service)
-		loader.Services = append(loader.Services, service)
 		return nil
 	default:
 		return fmt.Errorf("Unknown keyword %s", keyword)
@@ -146,15 +149,34 @@ func (loader *Loader) validate() error {
 	return nil
 }
 
+func (loader *Loader) Run() error {
+	for _, groups := range loader.State {
+		for _, state := range groups {
+
+			consistent, err := state.Consistent() // TODO: Differentiate between results and errors
+			if err != nil {
+				return err
+			}
+			meta := state.Meta()
+			result := Result{
+				Consistent: consistent,
+				Metadata:   &meta,
+				Message:     "",
+			}
+			loader.Results = append(loader.Results, result)
+		}
+	}
+
+	return nil
+}
+
 func FromBytes(data []byte) (*Loader, error) {
 
 	var err error
 
 	loader := Loader{
-		State: make(map[string][]State),
-		Files: []*File{},
-		Packages: []*Package{},
-		Services: []*Service{},
+		State:    make(map[string][]State),
+		Results:  make([]Result, 0),
 	}
 
 	err = yaml.Unmarshal(data, &loader)
