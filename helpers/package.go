@@ -8,8 +8,8 @@ import (
 
 func GetDpkgPackage(name string) (string, error) {
 	out, err := exec.Command("dpkg", "-l", name).Output() // TODO: Security
-	if err != nil {
-		return "", err
+	if err != nil { // dpkg doesn't know about the package
+		return "rc", nil
 	}
 	lines := strings.Split(string(out), "\n")
 	for _, line := range lines {
