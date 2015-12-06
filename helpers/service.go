@@ -5,6 +5,9 @@ import (
 	"github.com/coreos/go-systemd/dbus"
 )
 
+/*
+Check if the specified unit name is running with Systemd
+*/
 func SystemdUnitRunning(name string) (bool, error) {
 	conn, err := dbus.New()
 
@@ -29,6 +32,10 @@ func SystemdUnitRunning(name string) (bool, error) {
 	return true, nil
 }
 
+/*
+Check if the specified service name is running on the operating system.
+*/
+
 func ServiceRunning(name string) (bool, error) {
 	distro, err := GetDistro()
 	if err != nil {
@@ -42,6 +49,9 @@ func ServiceRunning(name string) (bool, error) {
 	}
 }
 
+/*
+Start a Systemd unit and wait for it to return. This method may block.
+*/
 func startSystemdUnit(name string) error {
 	conn, err := dbus.New()
 
@@ -61,6 +71,9 @@ func startSystemdUnit(name string) error {
 	return nil
 }
 
+/*
+Stop a Systemd unit and wait for it to return, this method may block.
+*/
 func stopSystemdUnit(name string) error {
 	conn, err := dbus.New()
 
@@ -80,6 +93,9 @@ func stopSystemdUnit(name string) error {
 	return nil
 }
 
+/*
+Update the service state, may be "running" or "stopped"
+*/
 
 func ChangeServiceState(name string, running bool) error {
 	distro, err := GetDistro()

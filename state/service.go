@@ -26,7 +26,7 @@ func (service *Service) Initialize() error {
 		service.Name = service.Metadata.Name
 	}
 	state := service.Metadata.State
-	if ! (state == "running" || state == "stopped") {
+	if !(state == "running" || state == "stopped") {
 		return fmt.Errorf("Invalid service state: %s", state)
 	}
 	return nil
@@ -45,7 +45,7 @@ func (service *Service) Execute() error {
 	if err != nil {
 		return err
 	}
-	if ! consistent {
+	if !consistent {
 		err := helpers.ChangeServiceState(service.Name, service.Running)
 		if err != nil {
 			return err

@@ -6,9 +6,12 @@ import (
 	"strings"
 )
 
+/*
+Get the status of a package in DPKG
+*/
 func GetDpkgPackage(name string) (string, error) {
 	out, err := exec.Command("dpkg", "-l", name).Output() // TODO: Security
-	if err != nil { // dpkg doesn't know about the package
+	if err != nil {                                       // dpkg doesn't know about the package
 		return "rc", nil
 	}
 	lines := strings.Split(string(out), "\n")
@@ -24,6 +27,9 @@ func GetDpkgPackage(name string) (string, error) {
 	return "", nil
 }
 
+/*
+Check to see if a package is installed on the operating system
+*/
 func GetPackageStatus(name string) (string, error) {
 	distro, err := GetDistro()
 	if err != nil {
@@ -51,6 +57,9 @@ func GetPackageStatus(name string) (string, error) {
 	}
 }
 
+/*
+Install a package with apt-get
+*/
 func installAptPackage(name string) error {
 	out, err := exec.Command("apt-get", "update").CombinedOutput()
 	if err != nil {
@@ -66,6 +75,9 @@ func installAptPackage(name string) error {
 	return nil
 }
 
+/*
+Install a package on the operating system
+*/
 func InstallPackage(name string) error {
 	distro, err := GetDistro()
 	if err != nil {

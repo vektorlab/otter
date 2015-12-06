@@ -1,13 +1,13 @@
 package main
 
 import (
-	"os"
-	"fmt"
 	"flag"
-	"strconv"
+	"fmt"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/vektorlab/otter/state"
+	"os"
+	"strconv"
 )
 
 var (

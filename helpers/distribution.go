@@ -12,6 +12,9 @@ type Distro struct {
 	Version    string // Major version of the distribution // TODO
 }
 
+/*
+Set the "family" name of the operating system
+*/
 func (d *Distro) SetFamily(family string) error {
 
 	switch family {
@@ -25,6 +28,9 @@ func (d *Distro) SetFamily(family string) error {
 	return nil
 }
 
+/*
+Set the init system based on the operating system family
+*/
 func (d *Distro) SetInitSystem() error {
 
 	switch d.Family {
@@ -37,6 +43,10 @@ func (d *Distro) SetInitSystem() error {
 	}
 	return nil
 }
+
+/*
+Get an operating system's distribution type by parsing the /etc/os-release
+*/
 
 func GetDistro() (*Distro, error) {
 	d := Distro{}

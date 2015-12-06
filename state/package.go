@@ -26,7 +26,7 @@ func (pkg *Package) Initialize() error {
 		pkg.Name = pkg.Metadata.Name
 	}
 	state := pkg.Metadata.State
-	if ! (state == "installed" || state == "removed") {
+	if !(state == "installed" || state == "removed") {
 		return fmt.Errorf("Invalid package state: %s", state)
 	}
 	return nil
@@ -61,7 +61,7 @@ func (pkg *Package) Execute() error {
 	if err != nil {
 		return err
 	}
-	if ! consistent {
+	if !consistent {
 		err := helpers.InstallPackage(pkg.Name)
 		if err != nil {
 			return err

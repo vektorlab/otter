@@ -8,7 +8,7 @@ An example YAML configuration might look like this:
 /root/readme.md: <-- Name
   file.rendered: <-- {type}.{state}
     mode: 644 <-- Key/Value arguments
-    source: git@github.com/vektorlab/otter/README.md
+    source: git:///git@github.com/vektorlab/otter/README.md
 */
 
 package state
@@ -20,27 +20,6 @@ import (
 	"io/ioutil"
 	"strings"
 )
-
-type State interface {
-	Consistent() (bool, error)
-	Dump() ([]byte, error)
-	Execute() error
-	Initialize() error
-	Meta() Metadata
-	Requirements() []string
-}
-
-type Result struct {
-	Consistent bool
-	Metadata   *Metadata
-	Message    string
-}
-
-type Metadata struct {
-	Name  string // Unique name to associate with a state
-	Type  string // The type of state "package", "file", etc.
-	State string // The desired state "installed", "rendered", etc.
-}
 
 type Loader struct {
 	stateRaw map[string]map[string]interface{}
@@ -108,6 +87,9 @@ func (loader *Loader) Dump() ([]byte, error) {
 	return json.Marshal(loader.State)
 }
 
+/*
+Return the total number of state objects loaded
+*/
 func (loader *Loader) Count() int {
 	var count int
 	for _, value := range loader.State {
@@ -116,6 +98,9 @@ func (loader *Loader) Count() int {
 	return count
 }
 
+/*
+Return all of the requirements for each loaded state
+*/
 func (loader *Loader) requirements(entry []State) []string {
 	reqs := make([]string, 0)
 	for s := range entry {
@@ -149,6 +134,9 @@ func (loader *Loader) validate() error {
 	return nil
 }
 
+/*
+Run each state's consistency check and load save the results
+*/
 func (loader *Loader) Consistent() error {
 	for _, groups := range loader.State {
 		for _, state := range groups {
@@ -161,7 +149,7 @@ func (loader *Loader) Consistent() error {
 			result := Result{
 				Consistent: consistent,
 				Metadata:   &meta,
-				Message:     "",
+				Message:    "",
 			}
 			loader.Results = append(loader.Results, result)
 		}
@@ -169,6 +157,9 @@ func (loader *Loader) Consistent() error {
 	return nil
 }
 
+/*
+Execute each state
+*/
 func (loader *Loader) Execute() error {
 	for _, groups := range loader.State {
 		for _, state := range groups {
@@ -181,13 +172,17 @@ func (loader *Loader) Execute() error {
 	return nil
 }
 
+/*
+Load a state objects from a byte array
+*/
+
 func FromBytes(data []byte) (*Loader, error) {
 
 	var err error
 
 	loader := Loader{
-		State:    make(map[string][]State),
-		Results:  make([]Result, 0),
+		State:   make(map[string][]State),
+		Results: make([]Result, 0),
 	}
 
 	err = yaml.Unmarshal(data, &loader)
@@ -204,6 +199,10 @@ func FromBytes(data []byte) (*Loader, error) {
 
 	return &loader, nil
 }
+
+/*
+Load state objects from a file path
+*/
 
 func FromPath(path string) (*Loader, error) {
 	data, err := ioutil.ReadFile(path)
