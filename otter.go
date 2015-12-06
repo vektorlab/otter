@@ -1,13 +1,13 @@
 package main
 
 import (
-	"flag"
+	"os"
 	"fmt"
+	"flag"
+	"strconv"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/vektorlab/otter/state"
-	"os"
-	"strconv"
 )
 
 var (
@@ -61,6 +61,7 @@ func usage(options []string) {
 	fmt.Println("\nCommands:")
 	fmt.Println(" ls	Output the state from the Otter configuration file")
 	fmt.Println(" state	Show the state of your operating system")
+	fmt.Println(" execute	Execute the state file against your operating system")
 }
 
 func main() {
@@ -89,19 +90,18 @@ func main() {
 		}
 		fmt.Println(string(out))
 	case "state":
+		err = stateLoader.Consistent()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		err = stateLoader.Run()
-
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
 		dumpResults(stateLoader.Results)
-
+	case "execute":
+		err = stateLoader.Execute()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	default:
 		flag.Usage()
 		os.Exit(1)

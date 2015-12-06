@@ -50,3 +50,35 @@ func GetPackageStatus(name string) (string, error) {
 		return "", fmt.Errorf("Unsupported operating system: %s", distro.Family)
 	}
 }
+
+func installAptPackage(name string) error {
+	out, err := exec.Command("apt-get", "update").CombinedOutput()
+	if err != nil {
+		fmt.Println(string(out))
+		return err
+	}
+	fmt.Println(string(out))
+	out, err = exec.Command("apt-get", "install", "-y", name).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(out))
+	return nil
+}
+
+func InstallPackage(name string) error {
+	distro, err := GetDistro()
+	if err != nil {
+		return err
+	}
+	switch distro.Family {
+	case "debian":
+		err := installAptPackage(name)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("Unsupported operating system: %s", distro.Family)
+	}
+	return nil
+}

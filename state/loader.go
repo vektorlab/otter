@@ -149,7 +149,7 @@ func (loader *Loader) validate() error {
 	return nil
 }
 
-func (loader *Loader) Run() error {
+func (loader *Loader) Consistent() error {
 	for _, groups := range loader.State {
 		for _, state := range groups {
 
@@ -166,7 +166,18 @@ func (loader *Loader) Run() error {
 			loader.Results = append(loader.Results, result)
 		}
 	}
+	return nil
+}
 
+func (loader *Loader) Execute() error {
+	for _, groups := range loader.State {
+		for _, state := range groups {
+			err := state.Execute()
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

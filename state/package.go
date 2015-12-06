@@ -57,6 +57,16 @@ func (pkg *Package) Consistent() (bool, error) {
 }
 
 func (pkg *Package) Execute() error {
+	consistent, err := pkg.Consistent()
+	if err != nil {
+		return err
+	}
+	if ! consistent {
+		err := helpers.InstallPackage(pkg.Name)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

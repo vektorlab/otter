@@ -41,6 +41,16 @@ func (service *Service) Consistent() (bool, error) {
 }
 
 func (service *Service) Execute() error {
+	consistent, err := service.Consistent()
+	if err != nil {
+		return err
+	}
+	if ! consistent {
+		err := helpers.ChangeServiceState(service.Name, service.Running)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
