@@ -1,11 +1,10 @@
 package state
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
 )
-
 
 func StateFactory(name, keyword string, data []byte) (State, error) {
 	split := strings.Split(keyword, ".")

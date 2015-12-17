@@ -25,43 +25,20 @@ docker:
       - Really Cool File
 `)
 
-var missing = []byte(`
-docker:
-  package.installed:
-    version: 1.9.1
-mesos:
-  package.installed:
-    require:
-      - docker
-      - zookeeper
-`)
+func TestStatesFromYaml(t *testing.T) {
 
-var circular = []byte(`
-docker:
-  package.installed:
-    version: 1.9.1
-    require:
-      - mesos
-mesos:
-  package.installed:
-    require:
-      - docker
-`)
-
-func TestFromBytes(t *testing.T) {
-
-	loader, err := FromYaml(simple)
+	states, err := StatesFromYaml(simple)
 	if err != nil {
 		fmt.Println("ERROR:", err)
 		t.Fail()
 	} else {
-		state, err := loader.Dump()
+		state, err := StatesToJson(states)
 		if err != nil {
 			fmt.Println("failed to dump state")
 			t.Fail()
 		}
 		fmt.Println(string(state))
-		rcf, _ := loader.State["Really Cool File"][0].Dump()
+		rcf, _ := states["Really Cool File"][0].Dump()
 		file := File{}
 		json.Unmarshal(rcf, &file)
 		if file.Mode != 644 {
@@ -70,24 +47,5 @@ func TestFromBytes(t *testing.T) {
 		if file.Metadata.State != "rendered" {
 			t.Fail()
 		}
-	}
-}
-
-func TestMissingRequirement(t *testing.T) {
-
-	_, err := FromYaml(missing)
-
-	if err == nil {
-		fmt.Println("Failed to detect missing requirement")
-		t.Fail()
-	}
-}
-
-func TestCircularRequirement(t *testing.T) {
-	_, err := FromYaml(circular)
-
-	if err == nil {
-		fmt.Println("Failed to detect circular requirement")
-		t.Fail()
 	}
 }

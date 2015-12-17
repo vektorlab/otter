@@ -27,13 +27,13 @@ func boolToColor(b bool) *color.Color {
 	}
 }
 
-func getLoader() *state.Loader {
-	loader, err := state.FromPathToYaml(file)
+func getStates() map[string][]state.State {
+	states, err := state.StatesFromYamlPath(file)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	return loader
+	return states
 }
 
 func dumpResults(results []state.Result) {
@@ -109,8 +109,8 @@ func main() {
 
 	switch flag.Arg(0) {
 	case "load":
-		loader := getLoader()
-		out, err := loader.Dump()
+		states := getStates()
+		out, err := state.StatesToJson(states)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -138,16 +138,16 @@ func main() {
 		}
 		dumpHosts(hosts)
 	case "state":
-		loader := getLoader()
-		err := loader.Consistent()
+		states := getStates()
+		results, err := state.Consistent(states)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dumpResults(loader.Results)
+		dumpResults(results)
 	case "execute":
-		loader := getLoader()
-		err := loader.Execute()
+		states := getStates()
+		err := state.Execute(states)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
