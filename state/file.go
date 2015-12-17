@@ -16,7 +16,6 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"os"
 	"strings"
 )
@@ -26,12 +25,12 @@ type SourceType string
 type FileType string
 
 type File struct {
-	Mode       int64      `mapstructure:"mode"`   // File should be set to this octal mode
-	Path       string     `mapstructure:"path"`   // File destination
-	Source     string     `mapstructure:"source"` // File source
-	SourceType SourceType `mapstructure:"-"`      // SourceType e.g. git, filesystem, s3
-	Metadata   Metadata   `mapstructure:"-"`
-	Require    []string   `mapstructure:"require"`
+	Mode       int64      `json:"mode"`   // File should be set to this octal mode
+	Path       string     `json:"path"`   // File destination
+	Source     string     `json:"source"` // File source
+	SourceType SourceType `json:"-"`      // SourceType e.g. git, filesystem, s3
+	Metadata   Metadata   `json:"metadata"`
+	Require    []string   `json:"require"`
 }
 
 /*
@@ -96,24 +95,4 @@ func (file *File) Consistent() (bool, error) {
 
 func (file *File) Execute() error {
 	return nil
-}
-
-func FileFromStructure(metadata Metadata, structure interface{}) (*File, error) {
-	var err error
-
-	file := File{
-		Metadata: metadata,
-	}
-
-	err = mapstructure.Decode(structure, &file)
-	if err != nil {
-		return nil, err
-	}
-
-	err = file.Initialize()
-	if err != nil {
-		return nil, err
-	}
-
-	return &file, nil
 }

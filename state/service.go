@@ -10,15 +10,14 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"github.com/vektorlab/otter/helpers"
 )
 
 type Service struct {
-	Name     string   `mapstructure:"name"`
-	Running  bool     `mapstructure:"running"`
-	Metadata Metadata `mapstructure:"-"`
-	Require  []string `mapstructure:"require"`
+	Name     string   `json:"name"`
+	Running  bool     `json:"running"`
+	Metadata Metadata `json:"metadata"`
+	Require  []string `json:"require"`
 }
 
 func (service *Service) Initialize() error {
@@ -64,24 +63,4 @@ func (service *Service) Requirements() []string {
 
 func (service *Service) Meta() Metadata {
 	return service.Metadata
-}
-
-func ServiceFromStructure(metadata Metadata, structure interface{}) (*Service, error) {
-	var err error
-
-	service := Service{
-		Metadata: metadata,
-	}
-
-	err = mapstructure.Decode(structure, &service)
-	if err != nil {
-		return nil, err
-	}
-
-	err = service.Initialize()
-	if err != nil {
-		return nil, err
-	}
-
-	return &service, nil
 }

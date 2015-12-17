@@ -28,7 +28,7 @@ func boolToColor(b bool) *color.Color {
 }
 
 func getLoader() *state.Loader {
-	loader, err := state.FromPath(file)
+	loader, err := state.FromPathToYaml(file)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

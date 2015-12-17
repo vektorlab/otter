@@ -50,7 +50,7 @@ mesos:
 
 func TestFromBytes(t *testing.T) {
 
-	loader, err := FromBytes(simple)
+	loader, err := FromYaml(simple)
 	if err != nil {
 		fmt.Println("ERROR:", err)
 		t.Fail()
@@ -75,7 +75,7 @@ func TestFromBytes(t *testing.T) {
 
 func TestMissingRequirement(t *testing.T) {
 
-	_, err := FromBytes(missing)
+	_, err := FromYaml(missing)
 
 	if err == nil {
 		fmt.Println("Failed to detect missing requirement")
@@ -84,7 +84,7 @@ func TestMissingRequirement(t *testing.T) {
 }
 
 func TestCircularRequirement(t *testing.T) {
-	_, err := FromBytes(circular)
+	_, err := FromYaml(circular)
 
 	if err == nil {
 		fmt.Println("Failed to detect circular requirement")

@@ -10,15 +10,14 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"github.com/vektorlab/otter/helpers"
 )
 
 type Package struct {
-	Name     string   `mapstructure:"name"`
-	Version  string   `mapstructure:"version"`
-	Metadata Metadata `mapstructure:"-"`
-	Require  []string `mapstructure:"require"`
+	Name     string   `json:"name"`
+	Version  string   `json:"version"`
+	Metadata Metadata `json:"metadata"`
+	Require  []string `json:"require"`
 }
 
 func (pkg *Package) Initialize() error {
@@ -68,24 +67,4 @@ func (pkg *Package) Execute() error {
 		}
 	}
 	return nil
-}
-
-func PackageFromStructure(metadata Metadata, structure interface{}) (*Package, error) {
-	var err error
-
-	pkg := Package{
-		Metadata: metadata,
-	}
-
-	err = mapstructure.Decode(structure, &pkg)
-	if err != nil {
-		return nil, err
-	}
-
-	err = pkg.Initialize()
-	if err != nil {
-		return nil, err
-	}
-
-	return &pkg, nil
 }

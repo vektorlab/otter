@@ -16,68 +16,14 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 	"io/ioutil"
-	"strings"
 )
 
 type Loader struct {
-	stateRaw map[string]map[string]interface{}
+	stateRaw map[string]map[string]json.RawMessage
 	State    map[string][]State
 	Results  []Result
-}
-
-/*
-Translate each section in the otter.yml file to a State object
-*/
-func (loader *Loader) sectionToState(name, keyword string, data interface{}) error {
-	split := strings.Split(keyword, ".")
-	metadata := Metadata{name, split[0], split[1]}
-	switch split[0] {
-	case "file":
-		file, err := FileFromStructure(metadata, data)
-		if err != nil {
-			return err
-		}
-		loader.State[name] = append(loader.State[name], file)
-		return nil
-	case "package":
-		pkg, err := PackageFromStructure(metadata, data)
-		if err != nil {
-			return err
-		}
-		loader.State[name] = append(loader.State[name], pkg)
-		return nil
-	case "service":
-		service, err := ServiceFromStructure(metadata, data)
-		if err != nil {
-			return err
-		}
-		loader.State[name] = append(loader.State[name], service)
-		return nil
-	default:
-		return fmt.Errorf("Unknown keyword %s", keyword)
-	}
-}
-
-/*
-Partially Unmarshal the YAML document and then call "sectionToState" to evaluate
-the keywords and decode the rest with Mapstructure.
-*/
-func (loader *Loader) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var err error
-	err = unmarshal(&loader.stateRaw)
-
-	if err != nil {
-		return err
-	}
-
-	for name, value := range loader.stateRaw {
-		for keyword, data := range value {
-			loader.sectionToState(name, keyword, data)
-		}
-	}
-	return err
 }
 
 /*
@@ -176,19 +122,40 @@ func (loader *Loader) Execute() error {
 Load a state objects from a byte array
 */
 
-func FromBytes(data []byte) (*Loader, error) {
+func FromYaml(data []byte) (*Loader, error) {
 
 	var err error
 
 	loader := Loader{
 		State:   make(map[string][]State),
+		stateRaw: make(map[string]map[string]json.RawMessage),
 		Results: make([]Result, 0),
 	}
 
-	err = yaml.Unmarshal(data, &loader)
+	j, err := yaml.YAMLToJSON(data)
 
 	if err != nil {
 		return nil, err
+	}
+
+	err = json.Unmarshal(j, &loader.stateRaw)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for name, value := range loader.stateRaw {
+		for keyword, data := range value {
+			state, err := StateFactory(name, keyword, data)
+			if err != nil {
+				return nil, err
+			}
+			err = state.Initialize()
+			if err != nil {
+				return nil, err
+			}
+			loader.State[state.Meta().Name] = append(loader.State[name], state)
+		}
 	}
 
 	err = loader.validate()
@@ -204,10 +171,10 @@ func FromBytes(data []byte) (*Loader, error) {
 Load state objects from a file path
 */
 
-func FromPath(path string) (*Loader, error) {
+func FromPathToYaml(path string) (*Loader, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	return FromBytes(data)
+	return FromYaml(data)
 }
