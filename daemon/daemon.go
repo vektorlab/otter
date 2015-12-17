@@ -39,15 +39,13 @@ func (daemon *Daemon) register() error {
 			daemon.index = response.Index
 		}
 	}
-
 	return nil
 }
 
 func (daemon *Daemon) synchronize() {
 	err := daemon.register()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalf(err.Error())
 	}
 	time.Sleep(15 * time.Second)
 	daemon.Run()
