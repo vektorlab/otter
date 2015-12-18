@@ -2,43 +2,36 @@ package daemon
 
 import (
 	"fmt"
+	//"github.com/vektorlab/otter/state"
 	"github.com/coreos/etcd/client"
-	"golang.org/x/net/context"
+	"github.com/vektorlab/otter/clients"
 	"log"
 	"os"
-	"strings"
 	"time"
 )
 
 type Daemon struct {
-	etcd     client.KeysAPI
-	index    uint64
+	conn     client.KeysAPI
+	last     string
 	firstRun bool
 }
 
 func (daemon *Daemon) register() error {
+
 	hostname, err := os.Hostname()
+
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	options := client.SetOptions{
-		TTL: 60 * time.Second,
-	}
-	response, err := daemon.etcd.Set(context.Background(), fmt.Sprintf("/hosts/%s/host", hostname), hostname, &options)
+
+	last, err := clients.Ping(daemon.conn, hostname, daemon.last)
+
 	if err != nil {
 		return err
 	}
 
-	if daemon.firstRun {
-		daemon.index = response.Index
-		daemon.firstRun = false
-	} else {
-		if daemon.index+1 != response.Index {
-			return fmt.Errorf("Another host is already registered with this hostname")
-		} else {
-			daemon.index = response.Index
-		}
-	}
+	daemon.last = last
+
 	return nil
 }
 
@@ -48,81 +41,55 @@ func (daemon *Daemon) synchronize() {
 		log.Fatalf(err.Error())
 	}
 	time.Sleep(15 * time.Second)
-	daemon.Run()
+	daemon.synchronize()
 }
 
-func (daemon *Daemon) maintainState() {
+func (daemon *Daemon) monitorEvents() {
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Fatal(err)
 	}
-	response, err := daemon.etcd.Get(context.Background(), fmt.Sprintf("/hosts/%s/state", hostname), nil)
+	change, err := clients.WaitForStateChange(daemon.conn, hostname)
 	if err != nil {
-		log.Println("Etcd error: ", err.Error())
-	} else {
-		fmt.Println(response.Node.Value)
+		panic(err)
 	}
-}
-
-func (daemon *Daemon) LoadState(state string) error {
-
-	hosts, err := daemon.ListHosts()
-
-	if err != nil {
-		return err
-	}
-
-	for _, host := range hosts {
-		response, err := daemon.etcd.Set(context.Background(), fmt.Sprintf("/hosts/%s/state", host), state, &client.SetOptions{})
+	fmt.Println(change.Action, change.Index, change.Node, change.PrevNode)
+	daemon.monitorEvents()
+	/*
+		response, err := daemon.etcd.Get(context.Background(), fmt.Sprintf("/hosts/%s/state", hostname), nil)
 		if err != nil {
-			return err
+			log.Println("Etcd error: ", err.Error())
+		} else {
+			states, err := state.StatesFromProcessedJson([]byte(response.Node.Value))
+			if err != nil {
+				panic(err)
+			}
+			err = state.Execute(states)
+			if err != nil {
+				log.Println("Caught exception applying state: ", err.Error())
+			}
 		}
-		log.Printf("Set host: %s %s", response.Action, host)
-	}
-
-	return nil
-}
-
-func (daemon *Daemon) ListHosts() ([]string, error) {
-
-	var hosts []string
-
-	response, err := daemon.etcd.Get(context.Background(), "/hosts", &client.GetOptions{Recursive: true})
-
-	if err != nil {
-		return hosts, err
-	}
-
-	for _, node := range response.Node.Nodes {
-		hosts = append(hosts, strings.Split(node.Key, "/")[2])
-	}
-
-	return hosts, nil
+	*/
 }
 
 func (daemon *Daemon) Run() {
 	go daemon.synchronize()
-	go daemon.maintainState()
+	go daemon.monitorEvents()
 	select {}
 }
 
 func NewDaemon(servers []string) (*Daemon, error) {
+	var err error
+
 	daemon := Daemon{
 		firstRun: true,
 	}
 
-	cfg := client.Config{
-		Endpoints: servers,
-		Transport: client.DefaultTransport,
-	}
-
-	c, err := client.New(cfg)
+	daemon.conn, err = clients.NewKeysApi(servers)
 
 	if err != nil {
 		return nil, err
 	}
-
-	daemon.etcd = client.NewKeysAPI(c)
 
 	return &daemon, nil
 }

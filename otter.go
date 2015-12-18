@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
+	"github.com/vektorlab/otter/clients"
 	"github.com/vektorlab/otter/daemon"
 	"github.com/vektorlab/otter/state"
 	"os"
@@ -109,29 +110,29 @@ func main() {
 
 	switch flag.Arg(0) {
 	case "load":
+		conn, err := clients.NewKeysApi(strings.Split(etcdUrl, ","))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		states := getStates()
 		out, err := state.StatesToJson(states)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		daemon, err := daemon.NewDaemon(strings.Split(etcdUrl, ","))
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		err = daemon.LoadState(string(out))
+		err = clients.SubmitState(conn, string(out))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 	case "ls":
-		daemon, err := daemon.NewDaemon(strings.Split(etcdUrl, ","))
+		conn, err := clients.NewKeysApi(strings.Split(etcdUrl, ","))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		hosts, err := daemon.ListHosts()
+		hosts, err := clients.ListHosts(conn)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
