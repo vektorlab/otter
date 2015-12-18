@@ -2,7 +2,7 @@
 
 ![Otter](img/Otter-300px.png)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Build](https://travis-ci.org/vektorlab/otter.svg?branch=master)
 
 Otter is a high-performance opinionated configuration management framework written in Go for servers that run containers.
 
