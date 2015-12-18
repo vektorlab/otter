@@ -30,8 +30,8 @@ Otter provides end-to-end encryption for exposing sensitive information to serve
 Handles the initial bootstrapping of a host OS taking it from a new OS installation to being ready for handling 
 container workload from a container orchestration tool.
 
-### Monitoring
-Otter provides inventory and host OS monitoring
+### Remote Execution
+Largely concurrent remote execution.
 
 ## Disclaimer
 **Otter is under active development and is not production-ready**
