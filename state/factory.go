@@ -3,13 +3,10 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
-func StateFactory(name, keyword string, data []byte) (State, error) {
-	split := strings.Split(keyword, ".")
-	metadata := Metadata{name, split[0], split[1]}
-	switch split[0] {
+func StateFactory(metadata Metadata, data []byte) (State, error) {
+	switch metadata.Type {
 	case "file":
 		file := &File{Metadata: metadata}
 		err := json.Unmarshal(data, &file)
@@ -32,6 +29,6 @@ func StateFactory(name, keyword string, data []byte) (State, error) {
 		}
 		return service, nil
 	default:
-		panic(fmt.Errorf("Unknown state keyword: %s", split[0]))
+		panic(fmt.Errorf("Unknown state keyword: %s", metadata.Type))
 	}
 }

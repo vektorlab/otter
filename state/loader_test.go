@@ -25,8 +25,25 @@ docker:
       - Really Cool File
 `)
 
-func TestStatesFromYaml(t *testing.T) {
+var processed = []byte(`
+{
+    "docker-engine": [
+        {
+            "mode": 644,
+            "path": "/etc/default/docker",
+            "source": "git:///git@github.com/vektorlab/otter/docker.txt",
+            "metadata": {
+                "Name": "docker-engine",
+                "Type": "file",
+                "State": "rendered"
+            },
+            "require": null
+        }
+    ]
+}
+`)
 
+func TestStatesFromYaml(t *testing.T) {
 	states, err := StatesFromYaml(simple)
 	if err != nil {
 		fmt.Println("ERROR:", err)
@@ -47,5 +64,16 @@ func TestStatesFromYaml(t *testing.T) {
 		if file.Metadata.State != "rendered" {
 			t.Fail()
 		}
+	}
+}
+
+func TestStatesFromProcessedJson(t *testing.T) {
+	states, err := StatesFromProcessedJson(processed)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+		t.Fail()
+	}
+	if len(states["docker-engine"]) != 1 {
+		fmt.Println("Did not load correct amount of states", states)
 	}
 }
