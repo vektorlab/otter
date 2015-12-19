@@ -33,7 +33,11 @@ func ListHosts(conn client.KeysAPI) ([]string, error) {
 	response, err := conn.Get(context.Background(), "/ping", &client.GetOptions{Recursive: true})
 
 	if err != nil {
-		return hosts, err
+		if strings.Contains(err.Error(), "Key not found") {
+			return hosts, nil
+		} else {
+			return hosts, err
+		}
 	}
 
 	for _, node := range response.Node.Nodes {

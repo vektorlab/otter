@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 )
 
 /*
@@ -31,16 +32,24 @@ func Consistent(states map[string][]State) ([]Result, error) {
 /*
 Execute each state
 */
-func Execute(states map[string][]State) error {
+func Execute(states map[string][]State) ([]Result, error) {
+	results := make([]Result, 0)
 	for _, groups := range states {
 		for _, state := range groups {
+			metadata := state.Meta()
+			log.Printf("Applying state: %s.%s.%s", metadata.Name, metadata.State, metadata.Type)
 			err := state.Execute()
+			result := Result{Metadata: &metadata}
 			if err != nil {
-				return err
+				result.Consistent = false
+				result.Message = err.Error()
+			} else {
+				result.Consistent = true
 			}
+			results = append(results, result)
 		}
 	}
-	return nil
+	return results, nil
 }
 
 /*

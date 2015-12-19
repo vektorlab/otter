@@ -148,11 +148,12 @@ func main() {
 		dumpResults(results)
 	case "execute":
 		states := getStates()
-		err := state.Execute(states)
+		results, err := state.Execute(states)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		dumpResults(results)
 	case "daemon":
 		daemon, err := daemon.NewDaemon(strings.Split(etcdUrl, ","))
 		if err != nil {
