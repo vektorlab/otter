@@ -43,6 +43,7 @@ func Execute(states map[string][]State) ([]Result, error) {
 			if err != nil {
 				result.Consistent = false
 				result.Message = err.Error()
+				log.Warnf("State failed: %s - %s", metadata.State, result.Message)
 			} else {
 				result.Consistent = true
 			}
