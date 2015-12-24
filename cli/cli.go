@@ -42,8 +42,6 @@ func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error)
 	}
 
 	switch command {
-	case "apply":
-		cli.Run = cli.Apply
 	case "daemon":
 		cli.Run = cli.Daemon
 	case "execute":
@@ -59,13 +57,6 @@ func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error)
 	}
 
 	return &cli, nil
-}
-
-/*
-Apply loaded states to remote hosts
-*/
-func (cli *OtterCLI) Apply() error {
-	return nil
 }
 
 /*

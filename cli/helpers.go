@@ -22,7 +22,6 @@ func usage(options []string) {
 		}
 	}
 	fmt.Println("\nCommands:")
-	fmt.Println(" apply	Apply the loaded state to remote hosts")
 	fmt.Println(" daemon	Run Otter in daemon mode")
 	fmt.Println(" execute	Execute the state file against remote hosts")
 	fmt.Println(" ls	List all hosts registered to the cluster")
