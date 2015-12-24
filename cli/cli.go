@@ -1,0 +1,131 @@
+package cli
+
+import (
+	"fmt"
+	"github.com/vektorlab/otter/client"
+	"github.com/vektorlab/otter/daemon"
+	"github.com/vektorlab/otter/state"
+)
+
+type OtterCLI struct {
+	otter        *clients.Otter
+	etcdURL      []string
+	states       map[string][]state.State
+	statesAsJson []byte
+	Run          func() error
+}
+
+func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error) {
+
+	var err error
+
+	cli := OtterCLI{}
+
+	cli.states, err = state.StatesFromYamlPath(statePath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cli.otter, err = clients.NewOtterClient(EtcdURL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cli.etcdURL = EtcdURL
+
+	cli.statesAsJson, err = state.StatesToJson(cli.states)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch command {
+	case "apply":
+		cli.Run = cli.Apply
+	case "daemon":
+		cli.Run = cli.Daemon
+	case "execute":
+		cli.Run = cli.Execute
+	case "load":
+		cli.Run = cli.Load
+	case "ls":
+		cli.Run = cli.Ls
+	case "state":
+		cli.Run = cli.State
+	default:
+		return nil, fmt.Errorf("Unknown command: %s", command)
+	}
+
+	return &cli, nil
+}
+
+/*
+Apply loaded states to remote hosts
+*/
+func (cli *OtterCLI) Apply() error {
+	return nil
+}
+
+/*
+Run Otter as a daemon (slave-mode)
+*/
+func (cli *OtterCLI) Daemon() error {
+	daemon, err := daemon.NewDaemon(cli.etcdURL)
+	if err != nil {
+		return err
+	}
+	daemon.Run()
+	return nil
+}
+
+/*
+Execute a remote command against slaves TODO
+*/
+func (cli *OtterCLI) Execute() error {
+	return nil
+}
+
+/*
+Load a new state definition
+*/
+func (cli *OtterCLI) Load() error {
+	return cli.otter.SubmitState(string(cli.statesAsJson))
+}
+
+/*
+List remote hosts
+*/
+func (cli *OtterCLI) Ls() error {
+	hosts, err := cli.otter.ListHosts()
+
+	if err != nil {
+		return err
+	}
+
+	DumpHosts(hosts)
+
+	return nil
+}
+
+/*
+Show the state of remote servers
+*/
+func (cli *OtterCLI) State() error {
+	hosts, err := cli.otter.ListHosts()
+
+	if err != nil {
+		return err
+	}
+
+	for _, host := range hosts {
+		results, err := cli.otter.SubmitCommand(host, "state")
+		if err != nil {
+			return err
+		}
+		DumpResults(results)
+	}
+
+	return nil
+}

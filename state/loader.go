@@ -37,11 +37,32 @@ func getMetadata(data json.RawMessage) (Metadata, error) {
 	return metadata, nil
 }
 
+func ResultsToJson(results []Result) ([]byte, error) {
+	data, err := json.Marshal(results)
+	if err != nil {
+		return []byte(``), err
+	}
+	return data, nil
+}
+
+func ResultsFromJson(data []byte) ([]Result, error) {
+
+	results := make([]Result, 0)
+
+	err := json.Unmarshal(data, &results)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+
+}
+
 func StatesToJson(states map[string][]State) ([]byte, error) {
-	var data []byte
 	data, err := json.Marshal(states)
 	if err != nil {
-		return data, err
+		return []byte(``), err
 	}
 	return data, nil
 }

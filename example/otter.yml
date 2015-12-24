@@ -5,8 +5,6 @@ docker-engine:
     source: git:///git@github.com/vektorlab/otter/docker.txt
   package.installed:
     version: "1.8.1"
-  service.running:
-    name: docker
 mesos:
   package.installed:
     version: 0.2.5
