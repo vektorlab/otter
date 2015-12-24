@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"github.com/vektorlab/otter/client"
-	"github.com/vektorlab/otter/state"
 	log "github.com/Sirupsen/logrus"
 	"os"
 	"time"
@@ -59,33 +58,16 @@ func (daemon *Daemon) listen() {
 }
 
 func (daemon *Daemon) ProcessCommand(command, id string) error {
+
+	log.Printf("Processing command %s (%s)", command, id)
+
 	switch command {
 
 	case "state":
+		return daemon.GetState(id)
 
-		log.Printf("Processing command %s (%s)", command, id)
-
-		states, err := daemon.otter.RetrieveStateMap()
-
-		if err != nil {
-			return err
-		}
-
-		results := make([]state.Result, 0)
-
-		for _, value := range states { // TODO: Dependency Processing
-			for _, state := range value {
-				result, err := daemon.otter.CheckConsistent(state)
-				if err != nil {
-					return err
-				}
-				results = append(results, result)
-			}
-		}
-		err = daemon.otter.SaveResults(id, results)
-		if err != nil {
-			return err
-		}
+	case "execute":
+		return daemon.ExecuteState(id)
 
 	default:
 		log.Fatalf("Unknown command: %s (%s)", command, id)

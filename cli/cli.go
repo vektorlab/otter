@@ -81,9 +81,23 @@ func (cli *OtterCLI) Daemon() error {
 }
 
 /*
-Execute a remote command against slaves TODO
+Execute a remote command against slaves
 */
 func (cli *OtterCLI) Execute() error {
+	hosts, err := cli.otter.ListHosts()
+
+	if err != nil {
+		return err
+	}
+
+	for _, host := range hosts {
+		results, err := cli.otter.SubmitCommand(host, "execute")
+		if err != nil {
+			return err
+		}
+		DumpResults(results)
+	}
+
 	return nil
 }
 
