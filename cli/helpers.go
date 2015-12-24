@@ -13,7 +13,7 @@ import (
 
 func usage(options []string) {
 	fmt.Println("Otter is an opinionated configuration management framework for servers that run containers\n")
-	fmt.Println("Usage: otter [OPTIONS] [load, ls, state, execute, daemon] \n")
+	fmt.Println("Usage: otter [OPTIONS] [load, ls, execute, daemon] \n")
 	fmt.Println("Flags:")
 	for i := 0; i < len(options); i++ {
 		f := flag.Lookup(options[i])
@@ -26,7 +26,6 @@ func usage(options []string) {
 	fmt.Println(" execute	Execute the state file against remote hosts")
 	fmt.Println(" ls	List all hosts registered to the cluster")
 	fmt.Println(" load	Load a state configuration into the cluster")
-	fmt.Println(" state	Show the state of remote hosts in the cluster")
 }
 
 func Parse() (string, string, []string) {
@@ -40,7 +39,7 @@ func Parse() (string, string, []string) {
 	options := []string{"c", "e"}
 
 	flag.NewFlagSet("Otter", flag.ExitOnError)
-	flag.StringVar(&command, "Command", "", "Otter command [ls, state, execute, daemon]")
+	flag.StringVar(&command, "Command", "", "Otter command [ls, load, execute, daemon]")
 	flag.StringVar(&path, "c", "otter.yml", "The path to an Otter state file")
 	flag.StringVar(&urls, "e", "http://127.0.0.1:2379", "URL to etcd hosts")
 
@@ -58,6 +57,15 @@ func Parse() (string, string, []string) {
 
 	return command, path, etcdUrls
 
+}
+
+func isConsistent(results []state.Result) bool {
+	for _, result := range results {
+		if ! result.Consistent {
+			return false
+		}
+	}
+	return true
 }
 
 func boolToColor(b bool) *color.Color {
@@ -92,16 +100,19 @@ func DumpResults(results []state.Result) {
 	table.Render()
 }
 
-func DumpHosts(hosts []string) {
+func DumpHosts(hosts map[string]bool) {
 	td := make([][]string, len(hosts))
 
-	for _, host := range hosts {
-		c := boolToColor(true).SprintfFunc()
-		td = append(td, []string{c(host)})
+	for host, consistent := range hosts {
+		c := boolToColor(consistent).SprintfFunc()
+		td = append(td, []string{
+			c(host),
+			c(strconv.FormatBool(consistent)),
+		})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"host"})
+	table.SetHeader([]string{"Host", "Consistent"})
 
 	for _, v := range td {
 		table.Append(v)

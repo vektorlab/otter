@@ -50,8 +50,6 @@ func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error)
 		cli.Run = cli.Load
 	case "ls":
 		cli.Run = cli.Ls
-	case "state":
-		cli.Run = cli.State
 	default:
 		return nil, fmt.Errorf("Unknown command: %s", command)
 	}
@@ -109,28 +107,17 @@ func (cli *OtterCLI) Ls() error {
 		return err
 	}
 
-	DumpHosts(hosts)
-
-	return nil
-}
-
-/*
-Show the state of remote servers
-*/
-func (cli *OtterCLI) State() error {
-	hosts, err := cli.otter.ListHosts()
-
-	if err != nil {
-		return err
-	}
+	hostList := make(map[string]bool)
 
 	for _, host := range hosts {
 		results, err := cli.otter.SubmitCommand(host, "state")
 		if err != nil {
 			return err
 		}
-		DumpResults(results)
+		hostList[host] = isConsistent(results)
 	}
+
+	DumpHosts(hostList)
 
 	return nil
 }
