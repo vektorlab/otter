@@ -13,6 +13,8 @@ An example YAML configuration might look like this:
 package state
 
 import (
+	"os"
+	"os/user"
 	"encoding/json"
 	"github.com/ghodss/yaml"
 	"io/ioutil"
@@ -138,7 +140,17 @@ func StatesFromYaml(data []byte) (map[string][]State, error) {
 
 }
 
+/*
+Load a YAML file from a given path, if the file doesn't exist default to ~/.otter
+ */
 func StatesFromYamlPath(path string) (map[string][]State, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		user, err := user.Current()
+		if err != nil {
+			return nil, err
+		}
+		path = user.HomeDir + "/.otter"
+	}
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
