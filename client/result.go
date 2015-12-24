@@ -2,6 +2,7 @@ package clients
 
 import (
 	"fmt"
+	"time"
 	log "github.com/Sirupsen/logrus"
 	etcd "github.com/coreos/etcd/client"
 	"github.com/vektorlab/otter/state"
@@ -29,7 +30,7 @@ func (otter *Otter) WaitForResult(id string) (string, string, error) {
 
 	key := fmt.Sprintf("/result/%s", id)
 
-	result, value, err := otter.WaitForChange(key, false)
+	result, value, err := otter.WaitForChange(key, false, 10 * time.Second)
 
 	if err != nil {
 		return "", "", err

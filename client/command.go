@@ -8,6 +8,7 @@ import (
 	"github.com/vektorlab/otter/state"
 	"golang.org/x/net/context"
 	"strings"
+	"time"
 )
 
 /*
@@ -46,7 +47,7 @@ func (otter *Otter) WaitForCommand(hostname string) (string, string, error) {
 
 	key := fmt.Sprintf("/command/%s")
 
-	key, id, err := otter.WaitForChange(fmt.Sprintf("/command/%s", hostname), true)
+	key, id, err := otter.WaitForChange(fmt.Sprintf("/command/%s", hostname), true, 0 * time.Second)
 
 	if err != nil {
 		return "", "", err

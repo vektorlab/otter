@@ -55,17 +55,38 @@ func NewOtterClient(servers []string) (*Otter, error) {
 /*
 Wait for a key to be added or modified in etcd
 */
-func (otter *Otter) WaitForChange(key string, recurse bool) (string, string, error) {
+func (otter *Otter) WaitForChange(key string, recurse bool, timeout time.Duration) (string, string, error) {
+
+	var (
+		cancel context.CancelFunc
+		ctx context.Context
+		err error
+	)
 
 	log.Printf("Waiting for change to keyspace: %s", key)
 
 	options := etcd.WatcherOptions{Recursive: recurse}
 	watcher := otter.etcdKeysApi.Watcher(key, &options)
 
-	response, err := watcher.Next(context.Background())
+	if timeout.Seconds() != 0 {
+
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+	} else {
+		ctx = context.Background()
+	}
+
+	response, err := watcher.Next(ctx)
 
 	if err != nil {
+
+		if ctx.Err() == context.DeadlineExceeded {
+			err = ctx.Err()
+		}
+
 		return "", "", err
+
 	}
 
 	log.Printf("Got change from key: %s", response.Node.Key)
