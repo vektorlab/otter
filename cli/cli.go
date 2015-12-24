@@ -43,13 +43,13 @@ func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error)
 
 	switch command {
 	case "daemon":
-		cli.Run = cli.Daemon
+		cli.Run = cli.daemon
 	case "execute":
-		cli.Run = cli.Execute
+		cli.Run = cli.execute
 	case "load":
-		cli.Run = cli.Load
+		cli.Run = cli.load
 	case "ls":
-		cli.Run = cli.Ls
+		cli.Run = cli.ls
 	default:
 		return nil, fmt.Errorf("Unknown command: %s", command)
 	}
@@ -60,7 +60,7 @@ func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error)
 /*
 Run Otter as a daemon (slave-mode)
 */
-func (cli *OtterCLI) Daemon() error {
+func (cli *OtterCLI) daemon() error {
 	daemon, err := daemon.NewDaemon(cli.etcdURL)
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func (cli *OtterCLI) Daemon() error {
 /*
 Execute a remote command against slaves
 */
-func (cli *OtterCLI) Execute() error {
+func (cli *OtterCLI) execute() error {
 	hosts, err := cli.otter.ListHosts()
 
 	if err != nil {
@@ -93,14 +93,14 @@ func (cli *OtterCLI) Execute() error {
 /*
 Load a new state definition
 */
-func (cli *OtterCLI) Load() error {
+func (cli *OtterCLI) load() error {
 	return cli.otter.SubmitState(string(cli.statesAsJson))
 }
 
 /*
 List remote hosts
 */
-func (cli *OtterCLI) Ls() error {
+func (cli *OtterCLI) ls() error {
 	hosts, err := cli.otter.ListHosts()
 
 	if err != nil {
