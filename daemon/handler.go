@@ -7,7 +7,7 @@ import (
 
 func (daemon *Daemon) GetState(id string) error {
 
-	states, err := daemon.otter.RetrieveStateMap()
+	stateMap, err := daemon.otter.RetrieveStateMap()
 
 	if err != nil {
 		return err
@@ -15,7 +15,7 @@ func (daemon *Daemon) GetState(id string) error {
 
 	results := make([]state.Result, 0)
 
-	for _, value := range states { // TODO: Dependency Processing
+	for _, value := range stateMap.States { // TODO: Dependency Processing
 		for _, state := range value {
 			result, err := daemon.otter.CheckConsistent(state)
 			if err != nil {
@@ -33,13 +33,13 @@ func (daemon *Daemon) GetState(id string) error {
 }
 
 func (daemon *Daemon) ExecuteState(id string) error {
-	states, err := daemon.otter.RetrieveStateMap()
+	stateMap, err := daemon.otter.RetrieveStateMap()
 
 	if err != nil {
 		return err
 	}
 
-	for _, value := range states {
+	for _, value := range stateMap.States {
 		for _, state := range value {
 			err := state.Execute()
 			if err != nil {

@@ -10,7 +10,7 @@ import (
 type OtterCLI struct {
 	otter        *clients.Otter
 	etcdURL      []string
-	states       map[string][]state.State
+	stateMap     state.StateMap
 	statesAsJson []byte
 	Run          func() error
 }
@@ -21,7 +21,7 @@ func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error)
 
 	cli := OtterCLI{}
 
-	cli.states, err = state.StatesFromYamlPath(statePath)
+	cli.stateMap, err = state.StateMapFromYamlPath(statePath)
 
 	if err != nil {
 		return nil, err
@@ -34,12 +34,6 @@ func NewOtterCLI(command, statePath string, EtcdURL []string) (*OtterCLI, error)
 	}
 
 	cli.etcdURL = EtcdURL
-
-	cli.statesAsJson, err = state.StatesToJson(cli.states)
-
-	if err != nil {
-		return nil, err
-	}
 
 	switch command {
 	case "daemon":
@@ -94,7 +88,11 @@ func (cli *OtterCLI) execute() error {
 Load a new state definition
 */
 func (cli *OtterCLI) load() error {
-	return cli.otter.SubmitState(string(cli.statesAsJson))
+	raw, err := cli.stateMap.ToJson()
+	if err != nil {
+		return err
+	}
+	return cli.otter.SubmitState(string(raw))
 }
 
 /*

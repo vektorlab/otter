@@ -12,19 +12,20 @@ import (
 Retrieve state data for this server from etcd, check if it is consistent, then return the result.
 */
 
-func (otter *Otter) RetrieveStateMap() (map[string][]state.State, error) {
+func (otter *Otter) RetrieveStateMap() (state.StateMap, error) {
+	var stateMap state.StateMap
 	key := fmt.Sprintf("/state/%s", otter.Hostname)
 	response, err := otter.etcdKeysApi.Get(context.Background(), key, &etcd.GetOptions{})
 	if err != nil {
 		log.Printf("Unable to load state from key %s", key)
-		return nil, err
+		return stateMap, err
 	} else {
 		raw := response.Node.Value
-		loaded, err := state.StatesFromProcessedJson([]byte(raw))
+		stateMap, err := state.StateMapFromProcessedJson([]byte(raw))
 		if err != nil {
 			log.Fatalf("Bad JSON state payload: %s", raw)
 		}
-		return loaded, nil
+		return stateMap, nil
 	}
 }
 
@@ -72,9 +73,9 @@ func (otter *Otter) CheckConsistent(s state.State) (state.Result, error) {
 /*
 Execute each state
 */
-func (otter *Otter) ExecuteState(states map[string][]state.State) ([]state.Result, error) {
+func (otter *Otter) ExecuteState(stateMap state.StateMap) ([]state.Result, error) {
 	results := make([]state.Result, 0)
-	for _, groups := range states {
+	for _, groups := range stateMap.States {
 		for _, s := range groups {
 			metadata := s.Meta()
 			log.Printf("Applying state: %s.%s.%s", metadata.Name, metadata.State, metadata.Type)
