@@ -47,7 +47,7 @@ func (otter *Otter) WaitForCommand(hostname string) (string, string, error) {
 
 	key := fmt.Sprintf("/command/%s")
 
-	key, id, err := otter.WaitForChange(fmt.Sprintf("/command/%s", hostname), true, 0 * time.Second)
+	key, id, err := otter.WaitForChange(fmt.Sprintf("/command/%s", hostname), true, 0*time.Second)
 
 	if err != nil {
 		return "", "", err

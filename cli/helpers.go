@@ -61,7 +61,7 @@ func Parse() (string, string, []string) {
 
 func isConsistent(results []state.Result) bool {
 	for _, result := range results {
-		if ! result.Consistent {
+		if !result.Consistent {
 			return false
 		}
 	}

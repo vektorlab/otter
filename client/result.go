@@ -2,11 +2,11 @@ package clients
 
 import (
 	"fmt"
-	"time"
 	log "github.com/Sirupsen/logrus"
 	etcd "github.com/coreos/etcd/client"
 	"github.com/vektorlab/otter/state"
 	"golang.org/x/net/context"
+	"time"
 )
 
 func (otter *Otter) SaveResults(id string, results []state.Result) error {
@@ -30,7 +30,7 @@ func (otter *Otter) WaitForResult(id string) (string, string, error) {
 
 	key := fmt.Sprintf("/result/%s", id)
 
-	result, value, err := otter.WaitForChange(key, false, 10 * time.Second)
+	result, value, err := otter.WaitForChange(key, false, 10*time.Second)
 
 	if err != nil {
 		return "", "", err

@@ -59,8 +59,8 @@ func (otter *Otter) WaitForChange(key string, recurse bool, timeout time.Duratio
 
 	var (
 		cancel context.CancelFunc
-		ctx context.Context
-		err error
+		ctx    context.Context
+		err    error
 	)
 
 	log.Printf("Waiting for change to keyspace: %s", key)

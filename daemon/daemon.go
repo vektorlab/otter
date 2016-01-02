@@ -1,8 +1,8 @@
 package daemon
 
 import (
-	"github.com/vektorlab/otter/client"
 	log "github.com/Sirupsen/logrus"
+	"github.com/vektorlab/otter/client"
 	"os"
 	"time"
 )

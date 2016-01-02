@@ -1,9 +1,9 @@
 package state
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
-	"encoding/json"
 )
 
 var simple = []byte(`
