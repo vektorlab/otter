@@ -1,13 +1,13 @@
 package state
 
 import (
-	"os"
+	"encoding/json"
 	"fmt"
+	"github.com/ghodss/yaml"
+	"io/ioutil"
+	"os"
 	"os/user"
 	"strings"
-	"io/ioutil"
-	"encoding/json"
-	"github.com/ghodss/yaml"
 )
 
 type State interface {
@@ -82,7 +82,7 @@ func StateMapFromProcessedJson(data []byte) (StateMap, error) {
 	}
 	for name, value := range raw {
 		for _, entry := range value {
-			metadata, err := getMetadata(entry)
+			metadata, err := MetadataFromJSON(entry)
 			if err != nil {
 				return sm, err
 			}
@@ -139,7 +139,7 @@ func StateMapFromYaml(data []byte) (StateMap, error) {
 
 /*
 Load a YAML file from a given path, if the file doesn't exist default to ~/.otter
- */
+*/
 func StateMapFromYamlPath(path string) (StateMap, error) {
 	var sm StateMap
 	if _, err := os.Stat(path); os.IsNotExist(err) {

@@ -10,31 +10,6 @@ type Result struct {
 	Message    string    // A message returned by the state
 }
 
-type Metadata struct {
-	Name  string // Unique name to associate with a state
-	Type  string // The type of state "package", "file", etc.
-	State string // The desired state "installed", "rendered", etc.
-}
-
-
-func getMetadata(data json.RawMessage) (Metadata, error) {
-	metadata := Metadata{}
-	raw := make(map[string]json.RawMessage)
-	err := json.Unmarshal(data, &raw)
-	if err != nil {
-		return metadata, err
-	}
-	for key, value := range raw {
-		if key == "metadata" {
-			err := json.Unmarshal(value, &metadata)
-			if err != nil {
-				return metadata, err
-			}
-		}
-	}
-	return metadata, nil
-}
-
 func ResultsToJson(results []Result) ([]byte, error) {
 	data, err := json.Marshal(results)
 	if err != nil {
