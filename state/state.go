@@ -26,6 +26,31 @@ type StateMap struct {
 func (sm *StateMap) Add(name string, entry State) {
 	sm.States[name] = append(sm.States[name], entry)
 }
+/*
+Apply all states loaded in the StateMap
+ */
+func (sm *StateMap) Apply() *ResultMap {
+	resultMap := NewResultMap()
+	for _, states := range sm.States {
+		for _, state := range states {
+			resultMap.Add(state.Execute())
+		}
+	}
+	return resultMap
+}
+
+/*
+Check if all states loaded in the StateMap are consistent
+ */
+func (sm *StateMap) Consistent() *ResultMap {
+	resultMap := NewResultMap()
+	for _, states := range sm.States {
+		for _, state := range states {
+			resultMap.Add(state.Consistent())
+		}
+	}
+	return resultMap
+}
 
 /*
 Return all of the requirements for each loaded state

@@ -12,24 +12,6 @@ type Result struct {
 	Message    string    // A message returned by the state
 }
 
-func ResultsFromJson(data []byte) ([]*Result, error) {
-	var results []*Result
-	raw := make([]json.RawMessage, 0)
-	err := json.Unmarshal(data, &raw)
-	if err != nil {
-		return results, err
-	}
-	for _, rawResult := range raw {
-		result := &Result{} // Result.Host must be modified by the Otter client
-		err := json.Unmarshal(rawResult, result)
-		if err != nil {
-			return results, err
-		}
-		results = append(results, result)
-	}
-	return results, nil
-}
-
 /*
 Return an array with a single result in state "Faulted", add the error message to the Result.
 */
@@ -47,28 +29,54 @@ func ResultsFromError(host string, err error) []*Result {
 	return results
 }
 
-func ResultsToJson(results []Result) ([]byte, error) {
-	var data []byte
-	data, err := json.Marshal(results)
-	if err != nil {
-		return data, err
-	}
-	return data, nil
-}
-
 type ResultMap struct {
 	Results map[string][]*Result
 	Host string
 }
 
+/*
+Add a new Result to the ResultMap
+ */
 func (rm *ResultMap) Add(result *Result) {
-	result.Host = rm.Host
-	if _, exists := rm.Results[result.Host]; !exists {
-		rm.Results[result.Host] = make([]*Result, 0)
+	if result.Host == "" {
+		result.Host = rm.Host // Assume this result was generated on this host if it is not specified.
 	}
-	rm.Results[result.Host] = append(rm.Results[result.Host], result)
+	if rm.Exists(result) {
+		return // Result already is added to this map, silently ignore it
+	} else {
+		if _, hostExists := rm.Results[result.Host]; !hostExists {
+			rm.Results[result.Host] = make([]*Result, 0) // Host entry does not exist, create an empty array
+			rm.Add(result) // Add it again with the new map entry
+			return
+		}
+		rm.Results[result.Host] = append(rm.Results[result.Host], result) // Add the Result to an existing host array
+	}
 }
 
+/*
+Check to see if there is a result for the specified host and metadata
+ */
+func (rm *ResultMap) Exists(other *Result) bool {
+	if results, exists := rm.Results[other.Host]; exists {
+		for _, result := range results {
+			if result.Metadata.Equal(other.Metadata) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (rm *ResultMap) Merge(other *ResultMap) {
+	for _, results := range other.Results {
+		for _, result := range results {
+			rm.Add(result)
+		}
+	}
+}
+/*
+Dump the ResultMap to JSON
+ */
 func (rm *ResultMap) ToJSON() ([]byte, error) {
 	data, err := json.Marshal(rm.Results)
 	if err != nil {
@@ -77,10 +85,25 @@ func (rm *ResultMap) ToJSON() ([]byte, error) {
 	return data, nil
 }
 
+/*
+Get a new ResultMap object
+ */
 func NewResultMap() *ResultMap {
 	resultMap := &ResultMap{
 		Results: make(map[string][]*Result),
 		Host: helpers.GetHostName(),
 	}
 	return resultMap
+}
+
+/*
+Create a ResultMap from JSON byte array
+ */
+func ResultMapFromJson(data []byte) (*ResultMap, error) {
+	resultMap := NewResultMap()
+	err := json.Unmarshal(data, &resultMap.Results)
+	if err != nil {
+		return nil, err
+	}
+	return resultMap, nil
 }
