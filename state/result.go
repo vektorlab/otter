@@ -15,9 +15,9 @@ type Result struct {
 /*
 Return an array with a single result in state "Faulted", add the error message to the Result.
 */
-func ResultsFromError(host string, err error) []*Result {
-	results := make([]*Result, 1)
-	results[0] = &Result{
+func ResultMapFromError(host string, err error) *ResultMap {
+	resultMap := NewResultMap()
+	resultMap.Add(&Result{
 		Host:    host,
 		Message: err.Error(),
 		Metadata: &Metadata{
@@ -25,18 +25,18 @@ func ResultsFromError(host string, err error) []*Result {
 			Type:  "Faulted",
 			State: "Faulted",
 		},
-	}
-	return results
+	})
+	return resultMap
 }
 
 type ResultMap struct {
 	Results map[string][]*Result
-	Host string
+	Host    string
 }
 
 /*
 Add a new Result to the ResultMap
- */
+*/
 func (rm *ResultMap) Add(result *Result) {
 	if result.Host == "" {
 		result.Host = rm.Host // Assume this result was generated on this host if it is not specified.
@@ -46,7 +46,7 @@ func (rm *ResultMap) Add(result *Result) {
 	} else {
 		if _, hostExists := rm.Results[result.Host]; !hostExists {
 			rm.Results[result.Host] = make([]*Result, 0) // Host entry does not exist, create an empty array
-			rm.Add(result) // Add it again with the new map entry
+			rm.Add(result)                               // Add it again with the new map entry
 			return
 		}
 		rm.Results[result.Host] = append(rm.Results[result.Host], result) // Add the Result to an existing host array
@@ -55,7 +55,7 @@ func (rm *ResultMap) Add(result *Result) {
 
 /*
 Check to see if there is a result for the specified host and metadata
- */
+*/
 func (rm *ResultMap) Exists(other *Result) bool {
 	if results, exists := rm.Results[other.Host]; exists {
 		for _, result := range results {
@@ -74,9 +74,10 @@ func (rm *ResultMap) Merge(other *ResultMap) {
 		}
 	}
 }
+
 /*
 Dump the ResultMap to JSON
- */
+*/
 func (rm *ResultMap) ToJSON() ([]byte, error) {
 	data, err := json.Marshal(rm.Results)
 	if err != nil {
@@ -87,18 +88,18 @@ func (rm *ResultMap) ToJSON() ([]byte, error) {
 
 /*
 Get a new ResultMap object
- */
+*/
 func NewResultMap() *ResultMap {
 	resultMap := &ResultMap{
 		Results: make(map[string][]*Result),
-		Host: helpers.GetHostName(),
+		Host:    helpers.GetHostName(),
 	}
 	return resultMap
 }
 
 /*
 Create a ResultMap from JSON byte array
- */
+*/
 func ResultMapFromJson(data []byte) (*ResultMap, error) {
 	resultMap := NewResultMap()
 	err := json.Unmarshal(data, &resultMap.Results)

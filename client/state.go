@@ -8,10 +8,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-/*
-Retrieve state data for this server from etcd, check if it is consistent, then return the result.
-*/
-
 func (otter *Otter) RetrieveStateMap() (state.StateMap, error) {
 	var stateMap state.StateMap
 	key := fmt.Sprintf("/state/%s", otter.Hostname)
@@ -29,9 +25,6 @@ func (otter *Otter) RetrieveStateMap() (state.StateMap, error) {
 	}
 }
 
-/*
-Submit a local state to all registered hosts.
-*/
 func (otter *Otter) SubmitState(state string) error {
 	hosts, err := otter.ListHosts()
 	if err != nil {
@@ -46,47 +39,4 @@ func (otter *Otter) SubmitState(state string) error {
 	}
 
 	return nil
-}
-
-/*
-Run each state's consistency check and load save the results
-*/
-func (otter *Otter) CheckConsistent(s state.State) (state.Result, error) {
-	metadata := s.Meta()
-	result := state.Result{
-		Metadata: &metadata,
-	}
-	consistent, err := s.Consistent() // TODO: Differentiate between results and errors
-	if err != nil {
-		result.Consistent = false
-		result.Message = err.Error()
-	} else {
-		result.Consistent = consistent
-		result.Message = ""
-	}
-	return result, nil
-}
-
-/*
-Execute each state
-*/
-func (otter *Otter) ExecuteState(stateMap state.StateMap) ([]state.Result, error) {
-	results := make([]state.Result, 0)
-	for _, groups := range stateMap.States {
-		for _, s := range groups {
-			metadata := s.Meta()
-			log.Printf("Applying state: %s.%s.%s", metadata.Name, metadata.State, metadata.Type)
-			err := s.Execute()
-			result := state.Result{Metadata: &metadata}
-			if err != nil {
-				result.Consistent = false
-				result.Message = err.Error()
-				log.Warnf("State failed: %s - %s", metadata.State, result.Message)
-			} else {
-				result.Consistent = true
-			}
-			results = append(results, result)
-		}
-	}
-	return results, nil
 }

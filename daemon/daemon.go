@@ -3,6 +3,7 @@ package daemon
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/vektorlab/otter/client"
+	"github.com/vektorlab/otter/helpers"
 	"os"
 	"time"
 )
@@ -51,9 +52,13 @@ func (daemon *Daemon) ProcessCommand(command, id string) error {
 	log.Printf("Processing command %s (%s)", command, id)
 	switch command {
 	case "apply":
-		return daemon.ApplyState(id)
+		stateMap, err := daemon.otter.RetrieveStateMap()
+		helpers.FailOnError(err, "Unable to retrieve StateMap from Etcd")
+		return daemon.otter.SaveResultMap(id, stateMap.Apply())
 	case "state":
-		return daemon.GetState(id)
+		stateMap, err := daemon.otter.RetrieveStateMap()
+		helpers.FailOnError(err, "Unable to retrieve StateMap from Etcd")
+		return daemon.otter.SaveResultMap(id, stateMap.Consistent())
 	default:
 		log.Fatalf("Unknown command: %s (%s)", command, id)
 	}

@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-func (otter *Otter) SaveResults(id string, results []state.Result) error {
-	data, err := state.ResultsToJson(results)
+func (otter *Otter) SaveResultMap(id string, resultMap *state.ResultMap) error {
+	data, err := resultMap.ToJSON()
 	if err != nil {
 		return err
 	}
@@ -24,14 +24,13 @@ func (otter *Otter) SaveResults(id string, results []state.Result) error {
 }
 
 /*
-Wait for a specific event to occur in the /event/<hostname> keyspace.
+Wait for a new ResultMap to be updated in the /result/<id> keyspace.
 */
-func (otter *Otter) WaitForResults(id string) ([]*state.Result, error) {
+func (otter *Otter) WaitForResults(id string) (*state.ResultMap, error) {
 	key := fmt.Sprintf("/result/%s", id)
 	_, value, err := otter.WaitForChange(key, false, 10*time.Second)
 	if err != nil {
 		return nil, err
 	}
-	return state.ResultsFromJson([]byte(value))
-
+	return state.ResultMapFromJson([]byte(value))
 }

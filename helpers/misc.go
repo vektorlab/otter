@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"math/rand"
 	"os"
 	"time"
@@ -22,4 +24,11 @@ func GetHostName() string {
 		panic(err)
 	}
 	return hostname
+}
+
+func FailOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+		panic(fmt.Sprintf("%s: %s", msg, err))
+	}
 }

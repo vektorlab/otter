@@ -14,23 +14,19 @@ import (
 /*
 Run a command against remote hosts
 */
-func (otter *Otter) SubmitCommand(host, command string, resultChan chan []*state.Result) {
+func (otter *Otter) SubmitCommand(host, command string, resultChan chan *state.ResultMap) {
 	key := fmt.Sprintf("/command/%s/%s", host, command)
 	id := helpers.RandomString(8)
 	_, err := otter.etcdKeysApi.Set(context.Background(), key, id, &etcd.SetOptions{})
 	log.Printf("Submitted command with keyspace: %s", key)
 	if err != nil {
-		resultChan <- state.ResultsFromError(host, err)
+		resultChan <- state.ResultMapFromError(host, err)
+		return
 	}
 	results, err := otter.WaitForResults(id)
 	if err != nil {
-		resultChan <- state.ResultsFromError(host, err)
-	}
-	for _, result := range results {
-		result.Host = host
-		if result.Message == "" {
-			result.Message = "None"
-		}
+		resultChan <- state.ResultMapFromError(host, err)
+		return
 	}
 	resultChan <- results
 }
@@ -40,7 +36,7 @@ Submit a single command against all hosts who's name matches the given hostStrin
 */
 func (otter *Otter) SubmitCommands(hostString, command string) (*state.ResultMap, error) {
 	hosts, err := otter.ListHosts() // TODO: Match hostString
-	resultChan := make(chan []*state.Result)
+	resultChan := make(chan *state.ResultMap)
 	if err != nil {
 		return nil, err
 	}
@@ -53,15 +49,12 @@ func (otter *Otter) SubmitCommands(hostString, command string) (*state.ResultMap
 /*
 Collect results from a channel and append them to a ResultMap when they are received
 */
-func (otter *Otter) CollectResults(results chan []*state.Result, count int) *state.ResultMap {
+func (otter *Otter) CollectResults(results chan *state.ResultMap, count int) *state.ResultMap {
 	resultMap := state.NewResultMap()
 	for i := 0; i < count; i++ {
 		log.Printf("Recieved %d of %d results sets", i, count)
 		r := <-results
-		for _, result := range r {
-			log.Printf("[%s] Saving result %s", result.Host, result.Metadata.Name)
-			resultMap.Add(result)
-		}
+		resultMap.Merge(r)
 	}
 	return resultMap
 }
