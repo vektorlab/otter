@@ -26,16 +26,12 @@ func (otter *Otter) SaveResults(id string, results []state.Result) error {
 /*
 Wait for a specific event to occur in the /event/<hostname> keyspace.
 */
-func (otter *Otter) WaitForResult(id string) (string, string, error) {
-
+func (otter *Otter) WaitForResults(id string) ([]*state.Result, error) {
 	key := fmt.Sprintf("/result/%s", id)
-
-	result, value, err := otter.WaitForChange(key, false, 10*time.Second)
-
+	_, value, err := otter.WaitForChange(key, false, 10*time.Second)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
-
-	return result, value, nil
+	return state.ResultsFromJson([]byte(value))
 
 }

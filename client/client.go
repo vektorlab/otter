@@ -22,33 +22,23 @@ type Otter struct {
 }
 
 func NewOtterClient(servers []string) (*Otter, error) {
-
 	client := Otter{}
-
 	cfg := etcd.Config{
 		Endpoints:               servers,
 		Transport:               etcd.DefaultTransport,
 		HeaderTimeoutPerRequest: time.Second,
 	}
-
 	etcdClient, err := etcd.New(cfg)
-
 	if err != nil {
 		return nil, err
 	}
-
 	api := etcd.NewKeysAPI(etcdClient)
-
 	client.etcdKeysApi = api
-
 	hostname, err := os.Hostname()
-
 	if err != nil {
 		return nil, err
 	}
-
 	client.Hostname = hostname
-
 	return &client, nil
 }
 
@@ -56,40 +46,27 @@ func NewOtterClient(servers []string) (*Otter, error) {
 Wait for a key to be added or modified in etcd
 */
 func (otter *Otter) WaitForChange(key string, recurse bool, timeout time.Duration) (string, string, error) {
-
 	var (
 		cancel context.CancelFunc
 		ctx    context.Context
 		err    error
 	)
-
 	log.Printf("Waiting for change to keyspace: %s", key)
-
 	options := etcd.WatcherOptions{Recursive: recurse}
 	watcher := otter.etcdKeysApi.Watcher(key, &options)
-
 	if timeout.Seconds() != 0 {
-
 		ctx, cancel = context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-
 	} else {
 		ctx = context.Background()
 	}
-
 	response, err := watcher.Next(ctx)
-
 	if err != nil {
-
 		if ctx.Err() == context.DeadlineExceeded {
 			err = ctx.Err()
 		}
-
 		return "", "", err
-
 	}
-
 	log.Printf("Got change from key: %s", response.Node.Key)
-
 	return response.Node.Key, response.Node.Value, nil
 }

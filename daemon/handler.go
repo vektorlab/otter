@@ -6,15 +6,11 @@ import (
 )
 
 func (daemon *Daemon) GetState(id string) error {
-
 	stateMap, err := daemon.otter.RetrieveStateMap()
-
 	if err != nil {
 		return err
 	}
-
 	results := make([]state.Result, 0)
-
 	for _, value := range stateMap.States { // TODO: Dependency Processing
 		for _, state := range value {
 			result, err := daemon.otter.CheckConsistent(state)
@@ -28,17 +24,14 @@ func (daemon *Daemon) GetState(id string) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (daemon *Daemon) ExecuteState(id string) error {
+func (daemon *Daemon) ApplyState(id string) error {
 	stateMap, err := daemon.otter.RetrieveStateMap()
-
 	if err != nil {
 		return err
 	}
-
 	for _, value := range stateMap.States {
 		for _, state := range value {
 			err := state.Execute()
@@ -47,7 +40,5 @@ func (daemon *Daemon) ExecuteState(id string) error {
 			}
 		}
 	}
-
 	return daemon.GetState(id)
-
 }

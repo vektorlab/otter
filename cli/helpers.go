@@ -13,7 +13,7 @@ import (
 
 func usage(options []string) {
 	fmt.Println("Otter is an opinionated configuration management framework for servers that run containers\n")
-	fmt.Println("Usage: otter [OPTIONS] [load, ls, execute, daemon] \n")
+	fmt.Println("Usage: otter [OPTIONS] [apply, load, ls, daemon] \n")
 	fmt.Println("Flags:")
 	for i := 0; i < len(options); i++ {
 		f := flag.Lookup(options[i])
@@ -22,8 +22,8 @@ func usage(options []string) {
 		}
 	}
 	fmt.Println("\nCommands:")
+	fmt.Println(" apply	Execute the state file against remote hosts")
 	fmt.Println(" daemon	Run Otter in daemon mode")
-	fmt.Println(" execute	Execute the state file against remote hosts")
 	fmt.Println(" ls	List all hosts registered to the cluster")
 	fmt.Println(" load	Load a state configuration into the cluster")
 }
@@ -76,27 +76,26 @@ func boolToColor(b bool) *color.Color {
 	}
 }
 
-func DumpResults(results []state.Result) {
-
-	td := make([][]string, len(results))
-
-	for _, result := range results {
-		c := boolToColor(result.Consistent).SprintfFunc()
-		td = append(td, []string{
-			c(result.Metadata.Name),
-			c(result.Metadata.Type),
-			c(result.Metadata.State),
-			c(strconv.FormatBool(result.Consistent)),
-			fmt.Sprint(result.Message),
-		})
-	}
-
+func DumpResults(resultMap *state.ResultMap) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Type", "State", "Consistent", "Result"})
-
-	for _, v := range td {
+	tableData := make([][]string, len(resultMap.Results))
+	for host, results := range resultMap.Results {
+		for _, result := range results {
+			c := boolToColor(result.Consistent).SprintfFunc()
+			tableData = append(tableData, []string{
+				c(host),
+				c(result.Metadata.Name),
+				c(result.Metadata.Type),
+				c(result.Metadata.State),
+				c(strconv.FormatBool(result.Consistent)),
+				fmt.Sprint(result.Message),
+			})
+		}
+	}
+	for _, v := range tableData {
 		table.Append(v)
 	}
+	table.SetHeader([]string{"Host", "Name", "Type", "State", "Consistent", "Result"})
 	table.Render()
 }
 
