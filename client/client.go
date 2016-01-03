@@ -11,8 +11,8 @@ package clients
 import (
 	log "github.com/Sirupsen/logrus"
 	etcd "github.com/coreos/etcd/client"
+	"github.com/vektorlab/otter/helpers"
 	"golang.org/x/net/context"
-	"os"
 	"time"
 )
 
@@ -34,11 +34,7 @@ func NewOtterClient(servers []string) (*Otter, error) {
 	}
 	api := etcd.NewKeysAPI(etcdClient)
 	client.etcdKeysApi = api
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, err
-	}
-	client.Hostname = hostname
+	client.Hostname = helpers.GetHostName()
 	return &client, nil
 }
 

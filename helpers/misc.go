@@ -1,7 +1,10 @@
 package helpers
 
-import "math/rand"
-import "time"
+import (
+	"math/rand"
+	"os"
+	"time"
+)
 
 func RandomString(length int) string {
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -11,4 +14,12 @@ func RandomString(length int) string {
 		result[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+func GetHostName() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+	return hostname
 }
