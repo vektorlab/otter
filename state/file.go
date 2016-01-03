@@ -77,18 +77,20 @@ func (file *File) Meta() Metadata {
 	return file.Metadata
 }
 
-func (file *File) Consistent() (bool, error) {
-	var err error
-	if err != nil {
-		return false, err
+func (file *File) Consistent() *Result {
+	result := &Result{
+		Metadata: &file.Metadata,
+		Consistent: false,
 	}
 	f, err := os.Stat(file.Path)
 	if f == nil {
-		return false, err
+		result.Message = err.Error()
+		return result
 	}
-	return f != nil, nil
+	result.Consistent = f != nil
+	return result
 }
 
-func (file *File) Execute() error {
-	return nil
+func (file *File) Execute() *Result {
+	return file.Consistent()
 }

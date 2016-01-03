@@ -43,25 +43,32 @@ func (pkg *Package) Meta() Metadata {
 	return pkg.Metadata
 }
 
-func (pkg *Package) Consistent() (bool, error) {
-	var err error
+func (pkg *Package) Consistent() *Result {
+	result := &Result{
+		Metadata: &pkg.Metadata,
+		Consistent: false,
+	}
 	status, err := helpers.GetPackageStatus(pkg.Name)
 	if err != nil {
-		return false, err
+		result.Message = err.Error()
+		return result
 	}
-	return status == pkg.Metadata.State, nil
+	result.Consistent = status == pkg.Metadata.State
+	return result
 }
 
-func (pkg *Package) Execute() error {
-	consistent, err := pkg.Consistent()
-	if err != nil {
-		return err
+func (pkg *Package) Execute() *Result {
+	result := &Result{
+		Metadata: &pkg.Metadata,
+		Consistent: pkg.Consistent().Consistent,
 	}
-	if !consistent {
+	if result.Consistent == false {
 		err := helpers.InstallPackage(pkg.Name)
 		if err != nil {
-			return err
+			result.Message = err.Error()
+			return result
 		}
+		result.Consistent = pkg.Consistent().Consistent
 	}
-	return nil
+	return result
 }

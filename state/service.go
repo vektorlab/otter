@@ -31,26 +31,34 @@ func (service *Service) Initialize() error {
 	return nil
 }
 
-func (service *Service) Consistent() (bool, error) {
+func (service *Service) Consistent() *Result {
+	result := &Result{
+		Metadata: &service.Metadata,
+		Consistent: false,
+	}
 	running, err := helpers.ServiceRunning(service.Name)
 	if err != nil {
-		return false, err
+		result.Message = err.Error()
+		return result
 	}
-	return service.Running == running, nil
+	result.Consistent = service.Running == running
+	return result
 }
 
-func (service *Service) Execute() error {
-	consistent, err := service.Consistent()
-	if err != nil {
-		return err
+func (service *Service) Execute() *Result {
+	result := &Result{
+		Metadata: &service.Metadata,
+		Consistent: service.Consistent().Consistent,
 	}
-	if !consistent {
+	if result.Consistent == false {
 		err := helpers.ChangeServiceState(service.Name, service.Running)
 		if err != nil {
-			return err
+			result.Message = err.Error()
+			return result
 		}
+		result.Consistent = service.Consistent().Consistent
 	}
-	return nil
+	return result
 }
 
 func (service *Service) Dump() ([]byte, error) {
