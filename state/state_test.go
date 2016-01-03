@@ -66,30 +66,34 @@ mesos:
       - docker
 `)
 
-func TestStateMapFromYaml(t *testing.T) {
-	stateMap, err := StateMapFromYaml(simple)
+func loadStateMapFromYaml(data []byte, t *testing.T) StateMap {
+	stateMap, err := StateMapFromYaml(data)
 	if err != nil {
-		fmt.Println("ERROR:", err)
+		fmt.Println("Failed to load YAML: ", err)
 		t.Fail()
-	} else {
-		_, err := stateMap.ToJson()
-		if err != nil {
-			fmt.Println("failed to dump state")
-			t.Fail()
-		}
-		rcf, _ := stateMap.States["Really Cool File"][0].Dump()
-		file := File{}
-		json.Unmarshal(rcf, &file)
-		if file.Mode != 644 {
-			t.Fail()
-		}
-		if file.Metadata.State != "rendered" {
-			t.Fail()
-		}
+	}
+	return stateMap
+}
+
+func TestFromYaml(t *testing.T) {
+	stateMap := loadStateMapFromYaml(simple, t)
+	_, err := stateMap.ToJson()
+	if err != nil {
+		fmt.Println("failed to dump state")
+		t.Fail()
+	}
+	rcf, _ := stateMap.States["Really Cool File"][0].Dump()
+	file := File{}
+	json.Unmarshal(rcf, &file)
+	if file.Mode != 644 {
+		t.Fail()
+	}
+	if file.Metadata.State != "rendered" {
+		t.Fail()
 	}
 }
 
-func TestStateMapFromProcessedJson(t *testing.T) {
+func TestFromProcessedJson(t *testing.T) {
 	stateMap, err := StateMapFromProcessedJson(processed)
 	if err != nil {
 		fmt.Println("ERROR:", err)
@@ -100,23 +104,18 @@ func TestStateMapFromProcessedJson(t *testing.T) {
 	}
 }
 
-func TestStateValidation(t *testing.T) {
-	stateMap, err := StateMapFromYaml(missing)
-	if err != nil {
-		fmt.Println("Failed to load YAML")
-		t.Fail()
-	}
-	err = stateMap.Validate()
+func TestMissingRequirement(t *testing.T) {
+	stateMap := loadStateMapFromYaml(missing, t)
+	err := stateMap.Validate()
 	if err == nil {
 		fmt.Println("Failed to detect missing requirement")
 		t.Fail()
 	}
-	stateMap, err = StateMapFromYaml(circular)
-	if err != nil {
-		fmt.Println("Failed to load YAML")
-		t.Fail()
-	}
-	err = stateMap.Validate()
+}
+
+func TestCircularRequirement(t *testing.T) {
+	stateMap := loadStateMapFromYaml(circular, t)
+	err := stateMap.Validate()
 	if err == nil {
 		fmt.Println("Failed to detect circular requirement")
 		t.Fail()
