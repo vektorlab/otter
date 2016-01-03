@@ -2,6 +2,7 @@ package state
 
 import (
 	"encoding/json"
+	"github.com/vektorlab/otter/helpers"
 )
 
 type Result struct {
@@ -57,9 +58,11 @@ func ResultsToJson(results []Result) ([]byte, error) {
 
 type ResultMap struct {
 	Results map[string][]*Result
+	Host string
 }
 
 func (rm *ResultMap) Add(result *Result) {
+	result.Host = rm.Host
 	if _, exists := rm.Results[result.Host]; !exists {
 		rm.Results[result.Host] = make([]*Result, 0)
 	}
@@ -77,6 +80,7 @@ func (rm *ResultMap) ToJSON() ([]byte, error) {
 func NewResultMap() *ResultMap {
 	resultMap := &ResultMap{
 		Results: make(map[string][]*Result),
+		Host: helpers.GetHostName(),
 	}
 	return resultMap
 }
