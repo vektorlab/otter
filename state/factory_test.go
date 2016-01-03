@@ -6,7 +6,7 @@ import (
 )
 
 var simpleFile = []byte(`
-{"path": "/tmp/no-exist", "mode": 644}
+{"path": "/tmp/no-exist", "mode": 644, "source": "git:///git@github.com:vektorlab/otter/README.md"}
 `)
 
 var simpleFileMeta = Metadata{
