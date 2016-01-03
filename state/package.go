@@ -45,13 +45,10 @@ func (pkg *Package) Meta() Metadata {
 
 func (pkg *Package) Consistent() (bool, error) {
 	var err error
-
 	status, err := helpers.GetPackageStatus(pkg.Name)
-
 	if err != nil {
 		return false, err
 	}
-
 	return status == pkg.Metadata.State, nil
 }
 

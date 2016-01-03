@@ -79,17 +79,13 @@ func (file *File) Meta() Metadata {
 
 func (file *File) Consistent() (bool, error) {
 	var err error
-
 	if err != nil {
 		return false, err
 	}
-
 	f, err := os.Stat(file.Path)
-
 	if f == nil {
 		return false, err
 	}
-
 	return f != nil, nil
 }
 

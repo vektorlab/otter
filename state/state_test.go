@@ -101,29 +101,22 @@ func TestStateMapFromProcessedJson(t *testing.T) {
 }
 
 func TestStateValidation(t *testing.T) {
-
 	stateMap, err := StateMapFromYaml(missing)
-
 	if err != nil {
 		fmt.Println("Failed to load YAML")
 		t.Fail()
 	}
 	err = stateMap.Validate()
-
 	if err == nil {
 		fmt.Println("Failed to detect missing requirement")
 		t.Fail()
 	}
-
 	stateMap, err = StateMapFromYaml(circular)
-
 	if err != nil {
 		fmt.Println("Failed to load YAML")
 		t.Fail()
 	}
-
 	err = stateMap.Validate()
-
 	if err == nil {
 		fmt.Println("Failed to detect circular requirement")
 		t.Fail()

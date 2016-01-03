@@ -33,13 +33,10 @@ func (otter *Otter) RetrieveStateMap() (state.StateMap, error) {
 Submit a local state to all registered hosts.
 */
 func (otter *Otter) SubmitState(state string) error {
-
 	hosts, err := otter.ListHosts()
-
 	if err != nil {
 		return err
 	}
-
 	for _, host := range hosts {
 		_, err := otter.etcdKeysApi.Set(context.Background(), fmt.Sprintf("/state/%s", host), state, &etcd.SetOptions{})
 		if err != nil {
