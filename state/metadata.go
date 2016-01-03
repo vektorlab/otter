@@ -9,7 +9,7 @@ type Metadata struct {
 }
 
 func (md *Metadata) Equal(metadata *Metadata) bool {
-	return metadata.Name == md.Name || metadata.Type == md.Type || metadata.State == md.State
+	return metadata.Name == md.Name && metadata.Type == md.Type && metadata.State == md.State
 }
 
 func MetadataFromJSON(data json.RawMessage) (Metadata, error) {
