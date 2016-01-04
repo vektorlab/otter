@@ -1,5 +1,6 @@
 package state
 
+/*
 import (
 	"fmt"
 	"testing"
@@ -13,6 +14,7 @@ func TestServiceConsistent(t *testing.T) {
 	}
 	fmt.Println(result.Consistent)
 }
+*/
 
 /*  TODO: systemd query times out when service is not found
 func TestServiceExecute(t *testing.T) {
