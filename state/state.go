@@ -116,28 +116,6 @@ func (sm *StateMap) requirements(entry []State) []string {
 }
 
 /*
-Validate that all requirements in each state exist and that there are no circular requirements
-func (sm *StateMap) Validate() error {
-	for name, entry := range sm.States {
-		reqs := sm.requirements(entry)
-		for req := range reqs {
-			other, exists := sm.States[reqs[req]]
-			if !exists {
-				return fmt.Errorf("Unable to find requirement: %s", reqs[req])
-			}
-			otherReqs := sm.requirements(other)
-			for req := range otherReqs {
-				if name == otherReqs[req] {
-					return fmt.Errorf("Detected circular requirement: %s", name)
-				}
-			}
-		}
-	}
-	return nil
-}
-*/
-
-/*
 Dump this StateMap to a JSON byte array
 */
 func (sm *StateMap) ToJson() ([]byte, error) {
