@@ -10,7 +10,7 @@ import (
 type OtterCLI struct {
 	otter        *clients.Otter
 	etcdURL      []string
-	stateMap     state.StateMap
+	stateMap     *state.StateMap
 	statesAsJson []byte
 	Run          func() error
 }

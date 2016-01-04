@@ -66,7 +66,7 @@ mesos:
       - docker
 `)
 
-func loadStateMapFromYaml(data []byte, t *testing.T) StateMap {
+func loadStateMapFromYaml(data []byte, t *testing.T) *StateMap {
 	stateMap, err := StateMapFromYaml(data)
 	if err != nil {
 		fmt.Println("Failed to load YAML: ", err)
@@ -82,7 +82,11 @@ func TestFromYaml(t *testing.T) {
 		fmt.Println("failed to dump state")
 		t.Fail()
 	}
-	rcf, _ := stateMap.States["Really Cool File"][0].Dump()
+	if len(stateMap.States) != 4 {
+		fmt.Println("Did not load correct amount of states: ", len(stateMap.States))
+		t.Fail()
+	}
+	rcf, _ := stateMap.States[0].Dump()
 	file := File{}
 	json.Unmarshal(rcf, &file)
 	if file.Mode != 644 {
@@ -99,14 +103,12 @@ func TestFromProcessedJson(t *testing.T) {
 		fmt.Println("ERROR:", err)
 		t.Fail()
 	}
-	if len(stateMap.States["docker-engine"]) != 1 {
+	if len(stateMap.States) != 1 {
 		fmt.Println("Did not load correct amount of states", stateMap.States)
 	}
 }
-
 func TestMissingRequirement(t *testing.T) {
-	stateMap := loadStateMapFromYaml(missing, t)
-	err := stateMap.Validate()
+	_, err := StateMapFromYaml(missing)
 	if err == nil {
 		fmt.Println("Failed to detect missing requirement")
 		t.Fail()
@@ -114,8 +116,7 @@ func TestMissingRequirement(t *testing.T) {
 }
 
 func TestCircularRequirement(t *testing.T) {
-	stateMap := loadStateMapFromYaml(circular, t)
-	err := stateMap.Validate()
+	_, err := StateMapFromYaml(circular)
 	if err == nil {
 		fmt.Println("Failed to detect circular requirement")
 		t.Fail()

@@ -8,13 +8,12 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (otter *Otter) RetrieveStateMap() (state.StateMap, error) {
-	var stateMap state.StateMap
+func (otter *Otter) RetrieveStateMap() (*state.StateMap, error) {
 	key := fmt.Sprintf("/state/%s", otter.Hostname)
 	response, err := otter.etcdKeysApi.Get(context.Background(), key, &etcd.GetOptions{})
 	if err != nil {
 		log.Printf("Unable to load state from key %s", key)
-		return stateMap, err
+		return nil, err
 	} else {
 		raw := response.Node.Value
 		stateMap, err := state.StateMapFromProcessedJson([]byte(raw))
