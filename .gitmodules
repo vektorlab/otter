@@ -1,9 +1,3 @@
-[submodule "website/themes/hugoscroll"]
-	path = website/home/themes/hugoscroll
-	url = git@github.com:SenjinDarashiva/hugoscroll.git
-[submodule "website/docs/hugo-theme-bootie-docs"]
-	path = website/docs/hugo-theme-bootie-docs
-	url = git@github.com:key-amb/hugo-theme-bootie-docs.git
 [submodule "website/home/themes/hugoscroll"]
 	path = website/home/themes/hugoscroll
 	url = git@github.com:SenjinDarashiva/hugoscroll.git
