@@ -1,6 +1,6 @@
 # Otter
 
-![Otter](img/Otter-300px.png)
+![Otter](website/home/static/img/otter.png)
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Build](https://travis-ci.org/vektorlab/otter.svg?branch=master) [![Docker Repository on Quay](https://quay.io/repository/vektorlab/otter/status "Docker Repository on Quay")](https://quay.io/repository/vektorlab/otter)
 

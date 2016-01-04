@@ -1,0 +1,26 @@
+baseurl = "http://otter.vektor.nyc"
+title = "Otter"
+languageCode = "en-us"
+MetaDataFormat = "toml"
+theme = "hugoscroll"
+paginate = 10
+[author]
+    name = "VektorLab"
+
+[permalinks]
+    # Optional. Change the permalink format for the 'post' content type.
+    # The format shown here is the same one Jekyll/Octopress uses by default.
+    post = "/blog/:year/:month/:day/:title/"
+
+[taxonomies]
+    # Optional. Use if you want tags and lists.
+    category = "categories"
+
+#
+# All parameters below here are optional and can be mixed and matched.
+#
+[params]
+  github = "vektorlab/otter"
+  email = "contact@vektor.nyc"
+  description = ""
+  logo = "/img/otter.png"
