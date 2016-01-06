@@ -1,63 +1,15 @@
-package cli
+package cmd
 
 import (
-	"flag"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/pflag"
 	"github.com/vektorlab/otter/state"
 	"os"
 	"strconv"
 	"strings"
 )
-
-func usage(options []string) {
-	fmt.Println("Otter is an opinionated configuration management framework for servers that run containers\n")
-	fmt.Println("Usage: otter [OPTIONS] [apply, load, ls, daemon] \n")
-	fmt.Println("Flags:")
-	for i := 0; i < len(options); i++ {
-		f := flag.Lookup(options[i])
-		if f != nil {
-			fmt.Printf(" -%s		%s [%s]\n", f.Name, f.Usage, f.DefValue)
-		}
-	}
-	fmt.Println("\nCommands:")
-	fmt.Println(" apply	Execute the state file against remote hosts")
-	fmt.Println(" daemon	Run Otter in daemon mode")
-	fmt.Println(" ls	List all hosts registered to the cluster")
-	fmt.Println(" load	Load a state configuration into the cluster")
-}
-
-func Parse() (string, string, []string) {
-
-	var (
-		command string
-		path    string
-		urls    string
-	)
-
-	options := []string{"c", "e"}
-
-	flag.NewFlagSet("Otter", flag.ExitOnError)
-	flag.StringVar(&command, "Command", "", "Otter command [ls, load, execute, daemon]")
-	flag.StringVar(&path, "c", "otter.yml", "The path to an Otter state file")
-	flag.StringVar(&urls, "e", "http://127.0.0.1:2379", "URL to etcd hosts")
-
-	flag.Parse()
-	flag.Usage = func() { usage(options) }
-
-	etcdUrls := strings.Split(urls, ",")
-
-	if len(flag.Args()) == 0 {
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	command = flag.Args()[0]
-
-	return command, path, etcdUrls
-
-}
 
 func isConsistent(results []state.Result) bool {
 	for _, result := range results {
@@ -117,4 +69,20 @@ func DumpHosts(hosts map[string]bool) {
 		table.Append(v)
 	}
 	table.Render()
+}
+
+func GetEtcdUrls(flag *pflag.Flag) []string {
+	if flag.Changed {
+		return strings.Split(flag.Value.String(), ",")
+	} else {
+		return strings.Split(flag.DefValue, ",")
+	}
+}
+
+func GetStatePath(flag *pflag.Flag) string {
+	if flag.Changed {
+		return flag.Value.String()
+	} else {
+		return flag.DefValue
+	}
 }
