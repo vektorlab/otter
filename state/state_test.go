@@ -9,12 +9,12 @@ import (
 var simple = []byte(`
 Really Cool File:
   file.rendered:
-    mode: 644
+    mode: "0644"
     source: git:///git@github.com/repo/cool_file.txt
     path: file:///root/really-cool-file.txt
 docker:
   file.rendered:
-    mode: 644
+    mode: "0644"
     source: git:///git@github.com/repo/docker.default
     path: /etc/default/docker
   service.running:
@@ -27,7 +27,7 @@ docker:
 
 var processed = []byte(`
 [{
-  "mode": 644,
+  "mode": "0644",
   "path": "/etc/default/docker",
   "source": "git:///git@github.com/vektorlab/otter/docker.txt",
   "metadata": {
@@ -85,7 +85,7 @@ func TestFromYaml(t *testing.T) {
 	rcf, _ := stateMap.States[0].Dump()
 	file := File{}
 	json.Unmarshal(rcf, &file)
-	if file.Mode != 644 {
+	if file.Mode != "0644" {
 		t.Fail()
 	}
 	if file.Metadata.State != "rendered" {

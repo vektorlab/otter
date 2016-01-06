@@ -6,12 +6,12 @@ import (
 )
 
 var simpleFile = []byte(`
-{"path": "/tmp/no-exist", "mode": 644, "source": "git:///git@github.com:vektorlab/otter/README.md"}
+{"path": "/tmp/no-exist", "mode": "644", "source": "git:///git@github.com:vektorlab/otter/README.md"}
 `)
 
 var simpleFileMeta = Metadata{
-	Name: "non-existant-file",
-	Type: "file",
+	Name:  "non-existant-file",
+	Type:  "file",
 	State: "rendered",
 }
 
@@ -20,16 +20,16 @@ var simplePackage = []byte(`
 `)
 
 var simplePackageMeta = Metadata{
-	Name: "non-existant-package",
-	Type: "package",
+	Name:  "non-existant-package",
+	Type:  "package",
 	State: "installed",
 }
 
 var simpleService = []byte(`{}`)
 
 var simpleServiceMeta = Metadata{
-	Name: "non-existant-service",
-	Type: "service",
+	Name:  "non-existant-service",
+	Type:  "service",
 	State: "running",
 }
 

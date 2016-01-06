@@ -16,45 +16,63 @@ package state
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
-
-type SourceType string
 
 type FileType string
 
 type File struct {
-	Mode       int64      `json:"mode"`   // File should be set to this octal mode
-	Path       string     `json:"path"`   // File destination
-	Source     string     `json:"source"` // File source
-	SourceType SourceType `json:"-"`      // SourceType e.g. git, filesystem, s3
-	Metadata   Metadata   `json:"metadata"`
-	Require    []string   `json:"require"`
+	Mode     string   `json:"mode"`   // File should be set to this octal mode
+	Path     string   `json:"path"`   // File destination
+	Source   string   `json:"source"` // File source
+	Metadata Metadata `json:"metadata"`
+	Require  []string `json:"require"`
 }
 
-/*
-Determine the "source type" of a file's content based on it's path prefix
-*/
-func (file *File) SetSourceType(field string) (SourceType, error) {
+func (file *File) retrieveFile() ([]byte, error) {
+	var body []byte
 	switch {
-	case strings.Contains(field, "git:///"):
-		return SourceType("git"), nil
-	case strings.Contains(field, "file:///"):
-		return SourceType("filesystem"), nil
-	case strings.Contains(field, "s3:///"):
-		return SourceType("s3"), nil
+	case strings.Contains(file.Source, "http://"):
+		log.Printf("Calling HTTP GET: %s", file.Source)
+		resp, err := http.Get(file.Source)
+		if err != nil {
+			return body, err
+		}
+		defer resp.Body.Close() // TODO: Buffer and error if a maximum file size is exceeded.
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return body, err
+		}
+		return body, nil
 	default:
-		return SourceType(""), fmt.Errorf("Unable to parse source type: %s", field)
+		return body, fmt.Errorf("Unable to parse source type: %s", file.Source)
 	}
 }
 
-func (file *File) Initialize() error {
-	var err error
-	file.SourceType, err = file.SetSourceType(file.Source)
+func (file *File) writeFile() error {
+	data, err := file.retrieveFile()
 	if err != nil {
 		return err
 	}
+	u, err := strconv.ParseUint(file.Mode, 8, 32)
+	if err != nil {
+		return err
+	}
+	mode := os.FileMode(u)
+	log.Printf("Writing to file [%s] %s", mode, file.Path)
+	return ioutil.WriteFile(file.Path, data, mode)
+}
+
+func (file *File) renderFile() error {
+	return nil
+}
+
+func (file *File) Initialize() error {
 	state := file.Metadata.State
 	if state != "rendered" {
 		return fmt.Errorf("Invalid file state: %s", state)
@@ -62,7 +80,7 @@ func (file *File) Initialize() error {
 	if file.Path == "" {
 		file.Path = file.Metadata.Name
 	}
-	return err
+	return nil
 }
 
 func (file *File) Dump() ([]byte, error) {
@@ -79,7 +97,7 @@ func (file *File) Meta() Metadata {
 
 func (file *File) Consistent() *Result {
 	result := &Result{
-		Metadata: &file.Metadata,
+		Metadata:   &file.Metadata,
 		Consistent: false,
 	}
 	f, err := os.Stat(file.Path)
@@ -92,5 +110,15 @@ func (file *File) Consistent() *Result {
 }
 
 func (file *File) Execute() *Result {
-	return file.Consistent()
+	err := file.writeFile()
+	result := &Result{
+		Metadata: &file.Metadata,
+	}
+	if err != nil {
+		result.Consistent = false
+		result.Message = err.Error()
+	} else {
+		result.Consistent = true
+	}
+	return result
 }
