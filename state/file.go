@@ -1,9 +1,9 @@
 /*
 A File represents a single file on an operating system.
 States -
-  rendered: A file is copied from a another source // TODO
-  deleted: A file is removed from the operating system // TODO
+  absent: A file is not present on the operating system // TODO
   linked: A symbolic link is created from one destination to another // TODO
+  rendered: A file is copied from a another source and rendered // TODO
 
 Source Types -
   git: A file is copied from a Git repository // TODO
@@ -54,6 +54,7 @@ func (file *File) retrieveFile() ([]byte, error) {
 	}
 }
 
+
 func (file *File) writeFile() error {
 	data, err := file.retrieveFile()
 	if err != nil {
@@ -74,7 +75,7 @@ func (file *File) renderFile() error {
 
 func (file *File) Initialize() error {
 	state := file.Metadata.State
-	if state != "rendered" {
+	if ! (state == "absent" || state == "linked" || state == "rendered") {
 		return fmt.Errorf("Invalid file state: %s", state)
 	}
 	if file.Path == "" {
@@ -100,25 +101,60 @@ func (file *File) Consistent() *Result {
 		Metadata:   &file.Metadata,
 		Consistent: false,
 	}
-	f, err := os.Stat(file.Path)
-	if f == nil {
-		result.Message = err.Error()
-		return result
+	switch {
+	case file.Metadata.State == "absent":
+		if _, err := os.Stat(file.Path); err == nil {
+			result.Message = fmt.Sprintf("File: %s exists", file.Path)
+			return result
+		}
+	case file.Metadata.State == "linked":
+		f, err := os.Stat(file.Path)
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+		if f.Mode() != os.ModeSymlink {
+			result.Message = fmt.Sprintf("File %s is not a symlink", file.Path)
+			return result
+		}
+	case file.Metadata.State == "rendered":
+		_, err := os.Stat(file.Path) // TODO: Compare contents of rendered remote file to local file.
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
 	}
-	result.Consistent = f != nil
+	result.Consistent = true
+	result.Message = "Success"
 	return result
 }
 
 func (file *File) Execute() *Result {
-	err := file.writeFile()
 	result := &Result{
 		Metadata: &file.Metadata,
+		Consistent: false,
 	}
-	if err != nil {
-		result.Consistent = false
-		result.Message = err.Error()
-	} else {
-		result.Consistent = true
+	switch {
+	case file.Metadata.State == "absent":
+		err := os.Remove(file.Path)
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+	case file.Metadata.State == "linked":
+		err := os.Symlink(file.Source, file.Path)
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+	case file.Metadata.State == "rendered":
+		err := file.writeFile()
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
 	}
+	result.Consistent = true
+	result.Message = "Success"
 	return result
 }
