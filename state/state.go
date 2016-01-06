@@ -138,28 +138,26 @@ Load a StateMap from a JSON Byte array which has already been initialized (conta
 */
 func StateMapFromProcessedJson(data []byte) (*StateMap, error) {
 	sm := NewStateMap()
-	raw := make(map[string][]json.RawMessage)
+	raw := make([]json.RawMessage, 0)
 	err := json.Unmarshal(data, &raw)
 	if err != nil {
-		return sm, err
+		return nil, err
 	}
 	states := make([]State, 0)
 	for _, value := range raw {
-		for _, entry := range value {
-			metadata, err := MetadataFromJSON(entry)
-			if err != nil {
-				return sm, err
-			}
-			state, err := StateFactory(metadata, entry)
-			if err != nil {
-				return sm, err
-			}
-			err = state.Initialize()
-			if err != nil {
-				return sm, err
-			}
-			states = append(states, state)
+		metadata, err := MetadataFromJSON(value)
+		if err != nil {
+			return nil, err
 		}
+		state, err := StateFactory(metadata, []byte(value))
+		if err != nil {
+			return nil, err
+		}
+		err = state.Initialize()
+		if err != nil {
+			return nil, err
+		}
+		states = append(states, state)
 	}
 	err = sm.AddMany(states, 0, len(states))
 	return sm, err

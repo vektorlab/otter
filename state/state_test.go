@@ -26,21 +26,17 @@ docker:
 `)
 
 var processed = []byte(`
-{
-    "docker-engine": [
-        {
-            "mode": 644,
-            "path": "/etc/default/docker",
-            "source": "git:///git@github.com/vektorlab/otter/docker.txt",
-            "metadata": {
-                "Name": "docker-engine",
-                "Type": "file",
-                "State": "rendered"
-            },
-            "require": null
-        }
-    ]
-}
+[{
+  "mode": 644,
+  "path": "/etc/default/docker",
+  "source": "git:///git@github.com/vektorlab/otter/docker.txt",
+  "metadata": {
+      "Name": "docker-engine",
+      "Type": "file",
+      "State": "rendered"
+   },
+  "require": null
+}]
 `)
 
 var missing = []byte(`
@@ -106,6 +102,7 @@ func TestFromProcessedJson(t *testing.T) {
 	if len(stateMap.States) != 1 {
 		fmt.Println("Did not load correct amount of states", stateMap.States)
 	}
+	fmt.Println(stateMap.States[0])
 }
 func TestMissingRequirement(t *testing.T) {
 	_, err := StateMapFromYaml(missing)
