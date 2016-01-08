@@ -1,6 +1,39 @@
-
 #site-head {
   background-color: #EEE;
   color: #525252;
 }
+
 #blog-logo img { max-height: 1000px }
+
+a.btn {
+  background-color: #50585D;
+}
+
+div.post-holder {
+  background: #EFEFEF;
+  color: #0F1E1E;
+}
+
+div.post-holder.entryTwo {
+  background: #EFEFEF;
+  background-image: url("/img/yaml.png");
+  background-repeat: no-repeat;
+  background-position: left;
+  background-size: contain;
+  color: #0F1E1E;
+  text-align : right;
+}
+
+div.post-holder.entryThree {
+  background: #EFEFEF;
+  color: #0F1E1E;
+}
+
+div.post-holder.entryFour {
+  background-color: #EFEFEF;
+  color: #0F1E1E;
+}
+
+footer.site-footer {
+  background: #666;
+}
