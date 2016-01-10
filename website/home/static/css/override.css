@@ -16,12 +16,7 @@ div.post-holder {
 
 div.post-holder.entryTwo {
   background: #EFEFEF;
-  background-image: url("/img/yaml.png");
-  background-repeat: no-repeat;
-  background-position: left;
-  background-size: contain;
   color: #0F1E1E;
-  text-align : right;
 }
 
 div.post-holder.entryThree {
