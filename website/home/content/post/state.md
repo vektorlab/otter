@@ -6,4 +6,4 @@ class="state post"
 
 ## Declarative State
 
-Otter provides a declarative state system allowing operators to describe host configuration in a with a simple YAML configuration file.
+Otter provides a simple declarative state system allowing system operators to describe host configuration in a with a YAML configuration file.
