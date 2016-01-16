@@ -27,9 +27,6 @@ Some features include:
 
 ##Roadmap
 
-### Host Secret Management
-Otter provides end-to-end encryption for exposing sensitive information to servers in a dynamic and programmable way.
-
 ### Bootstrapping
 Handles the initial bootstrapping of a host OS taking it from a new OS installation to being ready for handling 
 container workload from a container orchestration tool.
@@ -39,13 +36,4 @@ Largely concurrent remote execution.
 
 ## Disclaimer
 **Otter is under active development and is not production-ready**
-
-## Installation and usage
-    git clone git@github.com/vektorlab/otter.git
-    cd otter
-    go install
-    otter -c=example/otter.yml ls |jq .
-    otter -c=example/otter.yml state
-    otter -c=example/otter.yml execute
-    
 
