@@ -40,7 +40,7 @@ func TestFileConsistent(t *testing.T) {
 func TestRenderFromHTTP(t *testing.T) {
 	state := stateSetup(fileHttpRenderMeta, fileHttpRender, t)
 	result := state.Execute()
-	if !result.Consistent {
+	if result.Consistent != true {
 		fmt.Println("Failed to render file: ", result.Message)
 		t.Fail()
 	}
