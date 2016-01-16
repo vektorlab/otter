@@ -130,11 +130,9 @@ func (file *File) Consistent() *Result {
 }
 
 func (file *File) Execute() *Result {
-	result := &Result{
-		Metadata: &file.Metadata,
-		Consistent: false,
-	}
+	result := file.Consistent()
 	switch {
+	case result.Consistent == true: // File is in the correct state
 	case file.Metadata.State == "absent":
 		err := os.Remove(file.Path)
 		if err != nil {
@@ -154,7 +152,6 @@ func (file *File) Execute() *Result {
 			return result
 		}
 	}
-	result.Consistent = true
 	result.Message = "Success"
 	return result
 }
