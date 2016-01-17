@@ -12,7 +12,6 @@ import (
 
 type State interface {
 	Consistent() *Result    // Check to see if the state is consistent with the operating system's state
-	Dump() ([]byte, error)  // Dump the state to a JSON byte array
 	Execute() *Result       // Execute the state if it is not already Consistent
 	Initialize() error      // Initialize the state validating loaded fields
 	Meta() Metadata         // Return the state's metadata ("Name", "Type", and "state")

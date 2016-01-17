@@ -8,7 +8,6 @@ States -
 package state
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/coreos/go-systemd/dbus"
 	"github.com/vektorlab/otter/helpers"
@@ -60,10 +59,6 @@ func (service *Service) Execute() *Result {
 		result.Consistent = service.Consistent().Consistent
 	}
 	return result
-}
-
-func (service *Service) Dump() ([]byte, error) {
-	return json.Marshal(service)
 }
 
 func (service *Service) Requirements() []string {

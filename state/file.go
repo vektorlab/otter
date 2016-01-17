@@ -14,7 +14,6 @@ Source Types -
 package state
 
 import (
-	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
@@ -81,10 +80,6 @@ func (file *File) Initialize() error {
 		file.Path = file.Metadata.Name
 	}
 	return nil
-}
-
-func (file *File) Dump() ([]byte, error) {
-	return json.Marshal(file)
 }
 
 func (file *File) Requirements() []string {

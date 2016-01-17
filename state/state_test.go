@@ -82,9 +82,13 @@ func TestFromYaml(t *testing.T) {
 		fmt.Println("Did not load correct amount of states: ", len(stateMap.States))
 		t.Fail()
 	}
-	rcf, _ := stateMap.States[0].Dump()
+	b, err := json.Marshal(stateMap.States[0])
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
 	file := File{}
-	json.Unmarshal(rcf, &file)
+	json.Unmarshal(b, &file)
 	if file.Mode != "0644" {
 		t.Fail()
 	}

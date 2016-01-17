@@ -8,7 +8,6 @@ States -
 package state
 
 import (
-	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/vektorlab/otter/helpers"
@@ -32,10 +31,6 @@ func (pkg *Package) Initialize() error {
 		return fmt.Errorf("Invalid package state: %s", state)
 	}
 	return nil
-}
-
-func (pkg *Package) Dump() ([]byte, error) {
-	return json.Marshal(pkg)
 }
 
 func (pkg *Package) Requirements() []string {
