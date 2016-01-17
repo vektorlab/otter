@@ -54,7 +54,6 @@ func (file *File) retrieveFile() ([]byte, error) {
 	}
 }
 
-
 func (file *File) writeFile() error {
 	data, err := file.retrieveFile()
 	if err != nil {
@@ -75,7 +74,7 @@ func (file *File) renderFile() error {
 
 func (file *File) Initialize() error {
 	state := file.Metadata.State
-	if ! (state == "absent" || state == "linked" || state == "rendered") {
+	if !(state == "absent" || state == "linked" || state == "rendered") {
 		return fmt.Errorf("Invalid file state: %s", state)
 	}
 	if file.Path == "" {

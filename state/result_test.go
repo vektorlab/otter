@@ -2,11 +2,11 @@ package state
 
 import (
 	"fmt"
-	"testing"
 	"github.com/vektorlab/otter/helpers"
+	"testing"
 )
 
-func TestResultMap (t *testing.T) {
+func TestResultMap(t *testing.T) {
 	state := stateSetup(simpleFileMeta, simpleFile, t)
 	resultMap := NewResultMap()
 	resultMap.Add(state.Execute())
@@ -26,7 +26,7 @@ func TestResultMap (t *testing.T) {
 	}
 }
 
-func TestResultMapMergeNoDuplicate (t *testing.T) {
+func TestResultMapMergeNoDuplicate(t *testing.T) {
 	state1 := stateSetup(simpleFileMeta, simpleFile, t)
 	state2 := stateSetup(simplePackageMeta, simplePackage, t)
 	resultMap1 := NewResultMap()
@@ -41,7 +41,7 @@ func TestResultMapMergeNoDuplicate (t *testing.T) {
 	}
 }
 
-func TestResultMapMergeDuplicate (t *testing.T) {
+func TestResultMapMergeDuplicate(t *testing.T) {
 	state1 := stateSetup(simpleFileMeta, simpleFile, t)
 	state2 := stateSetup(simpleFileMeta, simpleFile, t)
 	resultMap1 := NewResultMap()

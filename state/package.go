@@ -163,7 +163,7 @@ func installAptPackage(name string) error {
 
 /*
 Remove a package with apt-get
- */
+*/
 func removeAptPackage(name string) error {
 	out, err := exec.Command("apt-get", "remove", name).CombinedOutput()
 	if err != nil {
@@ -198,7 +198,7 @@ func InstallPackage(name, version string) error {
 
 /*
 Remove a package from the operating system
- */
+*/
 func RemovePackage(name string) error {
 	distro, err := helpers.GetDistro()
 	if err != nil {
