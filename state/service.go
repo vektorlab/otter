@@ -10,6 +10,7 @@ package state
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/coreos/go-systemd/dbus"
 	"github.com/vektorlab/otter/helpers"
 )
 
@@ -33,10 +34,10 @@ func (service *Service) Initialize() error {
 
 func (service *Service) Consistent() *Result {
 	result := &Result{
-		Metadata: &service.Metadata,
+		Metadata:   &service.Metadata,
 		Consistent: false,
 	}
-	running, err := helpers.ServiceRunning(service.Name)
+	running, err := ServiceRunning(service.Name)
 	if err != nil {
 		result.Message = err.Error()
 		return result
@@ -47,11 +48,11 @@ func (service *Service) Consistent() *Result {
 
 func (service *Service) Execute() *Result {
 	result := &Result{
-		Metadata: &service.Metadata,
+		Metadata:   &service.Metadata,
 		Consistent: service.Consistent().Consistent,
 	}
 	if result.Consistent == false {
-		err := helpers.ChangeServiceState(service.Name, service.Running)
+		err := ChangeServiceState(service.Name, service.Running)
 		if err != nil {
 			result.Message = err.Error()
 			return result
@@ -71,4 +72,97 @@ func (service *Service) Requirements() []string {
 
 func (service *Service) Meta() Metadata {
 	return service.Metadata
+}
+
+/*
+Check if the specified unit name is running with Systemd
+*/
+func SystemdUnitRunning(name string) (bool, error) {
+	conn, err := dbus.New()
+	defer conn.Close()
+	if err != nil {
+		return false, err
+	}
+	units, err := conn.ListUnits()
+	if err != nil {
+		return false, err
+	}
+	for _, unit := range units {
+		if unit.Name == name+".service" {
+			return unit.ActiveState == "active", nil
+		}
+	}
+	return true, nil
+}
+
+/*
+Check if the specified service name is running on the operating system.
+*/
+func ServiceRunning(name string) (bool, error) {
+	distro, err := helpers.GetDistro()
+	if err != nil {
+		return false, err
+	}
+	switch distro.InitSystem {
+	case "systemd":
+		return SystemdUnitRunning(name)
+	default:
+		return false, fmt.Errorf("Unsupported init system %s", distro.InitSystem)
+	}
+}
+
+/*
+Start a Systemd unit and wait for it to return. This method may block.
+*/
+func startSystemdUnit(name string) error {
+	conn, err := dbus.New()
+	defer conn.Close()
+	if err != nil {
+		return err
+	}
+	c := make(chan string)
+	conn.StartUnit(name, "replace", c)
+	done := <-c
+	if done != "finished" {
+		return fmt.Errorf("Problem starting systemd unit, dbus responded: %s", done)
+	}
+	return nil
+}
+
+/*
+Stop a Systemd unit and wait for it to return, this method may block.
+*/
+func stopSystemdUnit(name string) error {
+	conn, err := dbus.New()
+	defer conn.Close()
+	if err != nil {
+		return err
+	}
+	c := make(chan string)
+	conn.StopUnit(name, "replace", c)
+	done := <-c
+	if done != "finished" {
+		return fmt.Errorf("Problem starting systemd unit, dbus responded: %s", done)
+	}
+	return nil
+}
+
+/*
+Update the service state, may be "running" or "stopped"
+*/
+func ChangeServiceState(name string, running bool) error {
+	distro, err := helpers.GetDistro()
+	if err != nil {
+		return err
+	}
+	switch distro.InitSystem {
+	case "systemd":
+		if running {
+			return startSystemdUnit(name)
+		} else {
+			return stopSystemdUnit(name)
+		}
+	default:
+		return fmt.Errorf("Unsupported init system %s", distro.InitSystem)
+	}
 }
