@@ -64,7 +64,7 @@ func (pkg *Package) Consistent() *Result {
 	return result
 }
 
-func (pkg *Package) Execute() *Result {
+func (pkg *Package) Apply() *Result {
 	result := pkg.Consistent()
 	switch {
 	case result.Consistent == true:

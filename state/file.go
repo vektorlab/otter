@@ -123,7 +123,7 @@ func (file *File) Consistent() *Result {
 	return result
 }
 
-func (file *File) Execute() *Result {
+func (file *File) Apply() *Result {
 	result := file.Consistent()
 	switch {
 	case result.Consistent == true: // File is in the correct state

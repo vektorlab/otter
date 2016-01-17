@@ -9,7 +9,7 @@ import (
 func TestResultMap(t *testing.T) {
 	state := stateSetup(simpleFileMeta, simpleFile, t)
 	resultMap := NewResultMap()
-	resultMap.Add(state.Execute())
+	resultMap.Add(state.Apply())
 	if resultMap.Results[helpers.GetHostName()][0].Consistent != false {
 		fmt.Println("ResultMap failed to load result")
 		t.Fail()

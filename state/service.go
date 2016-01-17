@@ -45,7 +45,7 @@ func (service *Service) Consistent() *Result {
 	return result
 }
 
-func (service *Service) Execute() *Result {
+func (service *Service) Apply() *Result {
 	result := &Result{
 		Metadata:   &service.Metadata,
 		Consistent: service.Consistent().Consistent,

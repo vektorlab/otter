@@ -16,7 +16,7 @@ func TestPackageConsistent(t *testing.T) {
 
 func TestPackageExecute(t *testing.T) {
 	state := stateSetup(simplePackageMeta, simplePackage, t)
-	result := state.Execute()
+	result := state.Apply()
 	if result.Consistent != false {
 		fmt.Println("Installed non-existant package: ", result.Metadata.Name)
 	}

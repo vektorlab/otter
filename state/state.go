@@ -11,11 +11,11 @@ import (
 )
 
 type State interface {
+	Apply() *Result         // Execute the state if it is not already Consistent
 	Consistent() *Result    // Check to see if the state is consistent with the operating system's state
-	Execute() *Result       // Execute the state if it is not already Consistent
 	Initialize() error      // Initialize the state validating loaded fields
 	Meta() Metadata         // Return the state's metadata ("Name", "Type", and "state")
-	Requirements() []string // Return the state's requirements // TODO: use in ordering of the state's execution and do not execute on failure
+	Requirements() []string // Return the state's requirements
 }
 
 type StateMap struct {
@@ -84,7 +84,7 @@ Apply all states loaded in the StateMap
 func (sm *StateMap) Apply() *ResultMap {
 	resultMap := NewResultMap()
 	for _, state := range sm.States {
-		resultMap.Add(state.Execute())
+		resultMap.Add(state.Apply())
 	}
 	return resultMap
 }
