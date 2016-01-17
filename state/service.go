@@ -20,18 +20,7 @@ type Service struct {
 	Require  []string `json:"require"`
 }
 
-func (service *Service) Initialize() error {
-	if service.Name == "" {
-		service.Name = service.Metadata.Name
-	}
-	state := service.Metadata.State
-	if !(state == "running" || state == "stopped") {
-		return fmt.Errorf("Invalid service state: %s", state)
-	}
-	return nil
-}
-
-func (service *Service) Consistent() *Result {
+func (service *Service) State() *Result {
 	result := &Result{
 		Metadata:   &service.Metadata,
 		Consistent: false,
@@ -48,7 +37,7 @@ func (service *Service) Consistent() *Result {
 func (service *Service) Apply() *Result {
 	result := &Result{
 		Metadata:   &service.Metadata,
-		Consistent: service.Consistent().Consistent,
+		Consistent: service.State().Consistent,
 	}
 	if result.Consistent == false {
 		err := ChangeServiceState(service.Name, service.Running)
@@ -56,7 +45,7 @@ func (service *Service) Apply() *Result {
 			result.Message = err.Error()
 			return result
 		}
-		result.Consistent = service.Consistent().Consistent
+		result.Consistent = service.State().Consistent
 	}
 	return result
 }

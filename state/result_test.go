@@ -30,9 +30,9 @@ func TestResultMapMergeNoDuplicate(t *testing.T) {
 	state1 := stateSetup(simpleFileMeta, simpleFile, t)
 	state2 := stateSetup(simplePackageMeta, simplePackage, t)
 	resultMap1 := NewResultMap()
-	resultMap1.Add(state1.Consistent())
+	resultMap1.Add(state1.State())
 	resultMap2 := NewResultMap()
-	resultMap2.Add(state2.Consistent())
+	resultMap2.Add(state2.State())
 	resultMap1.Merge(resultMap2)
 	fmt.Println(resultMap1.Results)
 	if len(resultMap1.Results[helpers.GetHostName()]) != 2 {
@@ -45,9 +45,9 @@ func TestResultMapMergeDuplicate(t *testing.T) {
 	state1 := stateSetup(simpleFileMeta, simpleFile, t)
 	state2 := stateSetup(simpleFileMeta, simpleFile, t)
 	resultMap1 := NewResultMap()
-	resultMap1.Add(state1.Consistent())
+	resultMap1.Add(state1.State())
 	resultMap2 := NewResultMap()
-	resultMap2.Add(state2.Consistent())
+	resultMap2.Add(state2.State())
 	resultMap1.Merge(resultMap2)
 	fmt.Println(len(resultMap1.Results[helpers.GetHostName()]))
 	if len(resultMap1.Results[helpers.GetHostName()]) != 1 {

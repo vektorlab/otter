@@ -7,7 +7,7 @@ import (
 
 func TestPackageConsistent(t *testing.T) {
 	state := stateSetup(simplePackageMeta, simplePackage, t)
-	result := state.Consistent()
+	result := state.State()
 	if result.Consistent != false {
 		fmt.Println("Detected non-existant package: ", result.Metadata.Name)
 	}

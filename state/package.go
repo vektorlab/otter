@@ -22,17 +22,6 @@ type Package struct {
 	Require  []string `json:"require"`
 }
 
-func (pkg *Package) Initialize() error {
-	if pkg.Name == "" {
-		pkg.Name = pkg.Metadata.Name
-	}
-	state := pkg.Metadata.State
-	if !(state == "installed" || state == "removed") {
-		return fmt.Errorf("Invalid package state: %s", state)
-	}
-	return nil
-}
-
 func (pkg *Package) Requirements() []string {
 	return pkg.Require
 }
@@ -41,7 +30,7 @@ func (pkg *Package) Meta() Metadata {
 	return pkg.Metadata
 }
 
-func (pkg *Package) Consistent() *Result {
+func (pkg *Package) State() *Result {
 	result := &Result{
 		Metadata:   &pkg.Metadata,
 		Consistent: false,
@@ -65,7 +54,7 @@ func (pkg *Package) Consistent() *Result {
 }
 
 func (pkg *Package) Apply() *Result {
-	result := pkg.Consistent()
+	result := pkg.State()
 	switch {
 	case result.Consistent == true:
 		return result

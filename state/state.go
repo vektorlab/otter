@@ -12,8 +12,7 @@ import (
 
 type State interface {
 	Apply() *Result         // Execute the state if it is not already Consistent
-	Consistent() *Result    // Check to see if the state is consistent with the operating system's state
-	Initialize() error      // Initialize the state validating loaded fields
+	State() *Result         // Check to see if the state is consistent with the operating system's state
 	Meta() Metadata         // Return the state's metadata ("Name", "Type", and "state")
 	Requirements() []string // Return the state's requirements
 }
@@ -95,7 +94,7 @@ Check if all states loaded in the StateMap are consistent
 func (sm *StateMap) Consistent() *ResultMap {
 	resultMap := NewResultMap()
 	for _, state := range sm.States {
-		resultMap.Add(state.Consistent())
+		resultMap.Add(state.State())
 	}
 	return resultMap
 }
@@ -152,10 +151,6 @@ func StateMapFromProcessedJson(data []byte) (*StateMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = state.Initialize()
-		if err != nil {
-			return nil, err
-		}
 		states = append(states, state)
 	}
 	err = sm.AddMany(states, 0, len(states))
@@ -178,10 +173,6 @@ func StateMapFromJson(data []byte) (*StateMap, error) {
 			split := strings.Split(keyword, ".")
 			metadata := Metadata{name, split[0], split[1]}
 			state, err := StateFactory(metadata, data)
-			if err != nil {
-				return sm, err
-			}
-			err = state.Initialize()
 			if err != nil {
 				return sm, err
 			}

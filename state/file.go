@@ -71,17 +71,6 @@ func (file *File) renderFile() error {
 	return nil
 }
 
-func (file *File) Initialize() error {
-	state := file.Metadata.State
-	if !(state == "absent" || state == "linked" || state == "rendered") {
-		return fmt.Errorf("Invalid file state: %s", state)
-	}
-	if file.Path == "" {
-		file.Path = file.Metadata.Name
-	}
-	return nil
-}
-
 func (file *File) Requirements() []string {
 	return file.Require
 }
@@ -90,7 +79,7 @@ func (file *File) Meta() Metadata {
 	return file.Metadata
 }
 
-func (file *File) Consistent() *Result {
+func (file *File) State() *Result {
 	result := &Result{
 		Metadata:   &file.Metadata,
 		Consistent: false,
@@ -124,7 +113,7 @@ func (file *File) Consistent() *Result {
 }
 
 func (file *File) Apply() *Result {
-	result := file.Consistent()
+	result := file.State()
 	switch {
 	case result.Consistent == true: // File is in the correct state
 	case file.Metadata.State == "absent":

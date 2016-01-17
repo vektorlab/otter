@@ -39,10 +39,6 @@ func stateSetup(metadata Metadata, stateBytes []byte, t *testing.T) State {
 		fmt.Println("Unable to load file: ", err)
 		t.Fail()
 	}
-	err = state.Initialize()
-	if err != nil {
-		fmt.Println("File failed to initialize: ", err)
-	}
 	return state
 }
 

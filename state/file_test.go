@@ -30,7 +30,7 @@ func compareFile(path, other string, t *testing.T) {
 
 func TestFileConsistent(t *testing.T) {
 	state := stateSetup(simpleFileMeta, simpleFile, t)
-	result := state.Consistent()
+	result := state.State()
 	if result.Consistent != false {
 		fmt.Println("Detected non-existant file: ", result.Metadata.Name)
 		t.Fail()
