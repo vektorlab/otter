@@ -36,7 +36,7 @@ func TestFileConsistent(t *testing.T) {
 		t.Fail()
 	}
 }
-
+/*
 func TestRenderFromHTTP(t *testing.T) {
 	state := stateSetup(fileHttpRenderMeta, fileHttpRender, t)
 	result := state.Apply()
@@ -46,3 +46,4 @@ func TestRenderFromHTTP(t *testing.T) {
 	}
 	compareFile("/tmp/otter-fileHttpRender", "Otter Test!\n", t)
 }
+*/
