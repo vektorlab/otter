@@ -14,7 +14,6 @@ type State interface {
 	Apply() *Result         // Execute the state if it is not already Consistent
 	State() *Result         // Check to see if the state is consistent with the operating system's state
 	Meta() Metadata         // Return the state's metadata ("Name", "Type", and "state")
-	Requirements() []string // Return the state's requirements
 }
 
 type StateMap struct {
@@ -28,8 +27,8 @@ func (sm *StateMap) Add(entry State) error {
 	if sm.Exists(entry.Meta(), false) {
 		return fmt.Errorf("Detected duplicate state entry: %s", entry.Meta())
 	}
-	requirements := entry.Requirements()
-	for _, requirement := range requirements {
+	md := entry.Meta()
+	for _, requirement := range md.Requirements {
 		if !sm.Exists(Metadata{Name: requirement}, true) {
 			return fmt.Errorf("Unable to find requirement: %s", requirement)
 		}
@@ -91,26 +90,12 @@ func (sm *StateMap) Apply() *ResultMap {
 /*
 Check if all states loaded in the StateMap are consistent
 */
-func (sm *StateMap) Consistent() *ResultMap {
+func (sm *StateMap) State() *ResultMap {
 	resultMap := NewResultMap()
 	for _, state := range sm.States {
 		resultMap.Add(state.State())
 	}
 	return resultMap
-}
-
-/*
-Return all of the requirements for each loaded state
-*/
-func (sm *StateMap) requirements(entry []State) []string {
-	reqs := make([]string, 0)
-	for s := range entry {
-		entryReqs := entry[s].Requirements()
-		for r := range entryReqs {
-			reqs = append(reqs, entryReqs[r])
-		}
-	}
-	return reqs
 }
 
 /*

@@ -17,7 +17,7 @@ var stateCmd = &cobra.Command{
 			return err
 		}
 		if cmd.Flag("local").Changed {
-			DumpResults(stateMap.Consistent())
+			DumpResults(stateMap.State())
 			return nil
 		} else {
 			client, err := clients.NewOtterClient(GetEtcdUrls(cmd.Flag("etcd")))

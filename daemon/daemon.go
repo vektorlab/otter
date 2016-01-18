@@ -58,7 +58,7 @@ func (daemon *Daemon) ProcessCommand(command, id string) error {
 	case "state":
 		stateMap, err := daemon.otter.RetrieveStateMap()
 		helpers.FailOnError(err, "Unable to retrieve StateMap from Etcd")
-		return daemon.otter.SaveResultMap(id, stateMap.Consistent())
+		return daemon.otter.SaveResultMap(id, stateMap.State())
 	default:
 		log.Fatalf("Unknown command: %s (%s)", command, id)
 	}
