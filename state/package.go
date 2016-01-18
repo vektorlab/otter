@@ -8,6 +8,7 @@ States -
 package state
 
 import (
+	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/vektorlab/otter/helpers"
@@ -19,11 +20,6 @@ type Package struct {
 	Name     string   `json:"name"`
 	Version  string   `json:"version"`
 	Metadata Metadata `json:"metadata"`
-	Require  []string `json:"require"`
-}
-
-func (pkg *Package) Requirements() []string {
-	return pkg.Require
 }
 
 func (pkg *Package) Meta() Metadata {
@@ -35,7 +31,7 @@ func (pkg *Package) State() *Result {
 		Metadata:   &pkg.Metadata,
 		Consistent: false,
 	}
-	status, version, err := GetPackageStatus(pkg.Name)
+	status, version, err := pkg.GetPackageStatus(pkg.Name)
 	if err != nil {
 		result.Message = err.Error()
 		return result
@@ -55,52 +51,56 @@ func (pkg *Package) State() *Result {
 
 func (pkg *Package) Apply() *Result {
 	result := pkg.State()
-	switch {
-	case result.Consistent == true:
+	if result.Consistent == true {
 		return result
-	case pkg.Metadata.State == "installed":
-		err := InstallPackage(pkg.Name, pkg.Version)
+	}
+	switch pkg.Metadata.State {
+	case "installed":
+		err := pkg.InstallPackage(pkg.Name, pkg.Version)
 		if err != nil {
 			result.Message = err.Error()
 			return result
 		}
 		result.Message = "Package Installed"
-	case pkg.Metadata.State == "removed":
-		err := RemovePackage(pkg.Name)
+		result.Consistent = true
+	case "removed":
+		err := pkg.RemovePackage(pkg.Name)
 		if err != nil {
 			result.Message = err.Error()
 			return result
 		}
 		result.Message = "Package Removed"
+		result.Consistent = true
 	}
 	return result
 }
 
 /*
-Get the status of a package in DPKG
+Create and validate a new Package State
 */
-func GetDpkgPackage(name string) (string, string, error) {
-	out, err := exec.Command("dpkg", "-l", name).Output() // TODO: Security
-	if err != nil {                                       // dpkg doesn't know about the package
-		return "rc", "", nil
+func newPackage(metadata Metadata, data []byte) (*Package, error) {
+	pkg := &Package{}
+	err := json.Unmarshal(data, &pkg)
+	if err != nil {
+		return nil, err
 	}
-	lines := strings.Split(string(out), "\n")
-	for _, line := range lines {
-		split := strings.Fields(line)
-		if len(split) >= 1 {
-			f := string(split[0][0])
-			if f == "h" || f == "i" || f == "p" || f == "r" || f == "u" {
-				return split[0], split[2], nil
-			}
-		}
+	pkg.Metadata = metadata
+	switch metadata.State {
+	case "installed":
+	case "removed":
+	default:
+		return nil, fmt.Errorf("Invalid package state: %s", metadata.State)
 	}
-	return "", "", nil
+	if pkg.Name == "" {
+		pkg.Name = metadata.Name
+	}
+	return pkg, nil
 }
 
 /*
 Check to see if a package is installed on the operating system
 */
-func GetPackageStatus(name string) (string, string, error) {
+func (pkg *Package) GetPackageStatus(name string) (string, string, error) {
 	distro, err := helpers.GetDistro()
 	if err != nil {
 		return "", "", err
@@ -108,7 +108,7 @@ func GetPackageStatus(name string) (string, string, error) {
 
 	switch distro.Family {
 	case "debian":
-		status, version, err := GetDpkgPackage(name)
+		status, version, err := pkg.GetDpkgPackage(name)
 		if err != nil {
 			return "", "", err
 		}
@@ -128,9 +128,73 @@ func GetPackageStatus(name string) (string, string, error) {
 }
 
 /*
+Install a package on the operating system
+*/
+func (pkg *Package) InstallPackage(name, version string) error {
+	distro, err := helpers.GetDistro()
+	if err != nil {
+		return err
+	}
+	switch distro.Family {
+	case "debian":
+		if version != "" {
+			name = name + fmt.Sprintf("==%s", version)
+		}
+		err := pkg.installAptPackage(name)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("Unsupported operating system: %s", distro.Family)
+	}
+	return nil
+}
+
+/*
+Remove a package from the operating system
+*/
+func (pkg *Package) RemovePackage(name string) error {
+	distro, err := helpers.GetDistro()
+	if err != nil {
+		return err
+	}
+	switch distro.Family {
+	case "debian":
+		err := pkg.removeAptPackage(name)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("Unsupported operating system: %s", distro.Family)
+	}
+	return nil
+}
+
+/*
+Get the status of a package in DPKG
+*/
+func (pkg *Package) GetDpkgPackage(name string) (string, string, error) {
+	out, err := exec.Command("dpkg", "-l", name).Output() // TODO: Security
+	if err != nil {                                       // dpkg doesn't know about the package
+		return "rc", "", nil
+	}
+	lines := strings.Split(string(out), "\n")
+	for _, line := range lines {
+		split := strings.Fields(line)
+		if len(split) >= 1 {
+			f := string(split[0][0])
+			if f == "h" || f == "i" || f == "p" || f == "r" || f == "u" {
+				return split[0], split[2], nil
+			}
+		}
+	}
+	return "", "", nil
+}
+
+/*
 Install a package with apt-get
 */
-func installAptPackage(name string) error {
+func (pkg *Package) installAptPackage(name string) error {
 	out, err := exec.Command("apt-get", "update").CombinedOutput()
 	if err != nil {
 		log.Warningln(string(out))
@@ -148,54 +212,11 @@ func installAptPackage(name string) error {
 /*
 Remove a package with apt-get
 */
-func removeAptPackage(name string) error {
+func (pkg *Package) removeAptPackage(name string) error {
 	out, err := exec.Command("apt-get", "remove", name).CombinedOutput()
 	if err != nil {
 		return err
 	}
 	log.Println("Removed Apt package: ", out)
-	return nil
-}
-
-/*
-Install a package on the operating system
-*/
-func InstallPackage(name, version string) error {
-	distro, err := helpers.GetDistro()
-	if err != nil {
-		return err
-	}
-	switch distro.Family {
-	case "debian":
-		if version != "" {
-			name = name + fmt.Sprintf("==%s", version)
-		}
-		err := installAptPackage(name)
-		if err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("Unsupported operating system: %s", distro.Family)
-	}
-	return nil
-}
-
-/*
-Remove a package from the operating system
-*/
-func RemovePackage(name string) error {
-	distro, err := helpers.GetDistro()
-	if err != nil {
-		return err
-	}
-	switch distro.Family {
-	case "debian":
-		err := removeAptPackage(name)
-		if err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("Unsupported operating system: %s", distro.Family)
-	}
 	return nil
 }

@@ -4,16 +4,12 @@ States -
   absent: A file is not present on the operating system // TODO
   linked: A symbolic link is created from one destination to another // TODO
   rendered: A file is copied from a another source and rendered // TODO
-
-Source Types -
-  git: A file is copied from a Git repository // TODO
-  s3: A file is copied from an Amazon S3 repo // TODO
-  file: A file is copied from the local file system // TODO
 */
 
 package state
 
 import (
+	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
@@ -23,16 +19,110 @@ import (
 	"strings"
 )
 
-type FileType string
-
 type File struct {
 	Mode     string   `json:"mode"`   // File should be set to this octal mode
 	Path     string   `json:"path"`   // File destination
 	Source   string   `json:"source"` // File source
 	Metadata Metadata `json:"metadata"`
-	Require  []string `json:"require"`
 }
 
+func (file *File) Meta() Metadata {
+	return file.Metadata
+}
+
+func (file *File) State() *Result {
+	result := &Result{
+		Metadata:   &file.Metadata,
+		Consistent: false,
+	}
+	switch file.Metadata.State {
+	case "absent":
+		if _, err := os.Stat(file.Path); err == nil {
+			result.Message = fmt.Sprintf("File: %s exists", file.Path)
+			return result
+		}
+	case "linked":
+		f, err := os.Stat(file.Path)
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+		if f.Mode() != os.ModeSymlink {
+			result.Message = fmt.Sprintf("File %s is not a symlink", file.Path)
+			return result
+		}
+	case "rendered":
+		_, err := os.Stat(file.Path) // TODO: Compare contents of rendered remote file to local file.
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+	}
+	result.Consistent = true
+	return result
+}
+
+func (file *File) Apply() *Result {
+	result := file.State()
+	if result.Consistent == true {
+		return result
+	}
+	switch file.Metadata.State {
+	case "absent":
+		err := os.Remove(file.Path)
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+		result.Message = "File removed"
+		result.Consistent = true
+	case "linked":
+		err := os.Symlink(file.Source, file.Path)
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+		result.Message = "Symlink created"
+		result.Consistent = true
+	case "rendered":
+		err := file.writeFile()
+		if err != nil {
+			result.Message = err.Error()
+			return result
+		}
+		result.Message = "File rendered"
+		result.Consistent = true
+	}
+	return result
+}
+
+/*
+Create and validate a new File State
+*/
+func newFile(metadata Metadata, data []byte) (*File, error) {
+	file := &File{}
+	err := json.Unmarshal(data, &file)
+	if err != nil {
+		return nil, err
+	}
+	file.Metadata = metadata
+	switch metadata.State {
+	case "absent":
+	case "linked":
+	case "rendered":
+	default:
+		return nil, fmt.Errorf("Invalid file state: %s", metadata.State)
+	}
+	if file.Path == "" {
+		file.Path = metadata.Name
+	}
+	return file, nil
+
+}
+
+/*
+Retrieve a file from a remote source
+*/
 func (file *File) retrieveFile() ([]byte, error) {
 	var body []byte
 	switch {
@@ -53,6 +143,9 @@ func (file *File) retrieveFile() ([]byte, error) {
 	}
 }
 
+/*
+Write a file to local disk
+*/
 func (file *File) writeFile() error {
 	data, err := file.retrieveFile()
 	if err != nil {
@@ -65,76 +158,4 @@ func (file *File) writeFile() error {
 	mode := os.FileMode(u)
 	log.Printf("Writing to file [%s] %s", mode, file.Path)
 	return ioutil.WriteFile(file.Path, data, mode)
-}
-
-func (file *File) renderFile() error {
-	return nil
-}
-
-func (file *File) Requirements() []string {
-	return file.Require
-}
-
-func (file *File) Meta() Metadata {
-	return file.Metadata
-}
-
-func (file *File) State() *Result {
-	result := &Result{
-		Metadata:   &file.Metadata,
-		Consistent: false,
-	}
-	switch {
-	case file.Metadata.State == "absent":
-		if _, err := os.Stat(file.Path); err == nil {
-			result.Message = fmt.Sprintf("File: %s exists", file.Path)
-			return result
-		}
-	case file.Metadata.State == "linked":
-		f, err := os.Stat(file.Path)
-		if err != nil {
-			result.Message = err.Error()
-			return result
-		}
-		if f.Mode() != os.ModeSymlink {
-			result.Message = fmt.Sprintf("File %s is not a symlink", file.Path)
-			return result
-		}
-	case file.Metadata.State == "rendered":
-		_, err := os.Stat(file.Path) // TODO: Compare contents of rendered remote file to local file.
-		if err != nil {
-			result.Message = err.Error()
-			return result
-		}
-	}
-	result.Consistent = true
-	result.Message = "Success"
-	return result
-}
-
-func (file *File) Apply() *Result {
-	result := file.State()
-	switch {
-	case result.Consistent == true: // File is in the correct state
-	case file.Metadata.State == "absent":
-		err := os.Remove(file.Path)
-		if err != nil {
-			result.Message = err.Error()
-			return result
-		}
-	case file.Metadata.State == "linked":
-		err := os.Symlink(file.Source, file.Path)
-		if err != nil {
-			result.Message = err.Error()
-			return result
-		}
-	case file.Metadata.State == "rendered":
-		err := file.writeFile()
-		if err != nil {
-			result.Message = err.Error()
-			return result
-		}
-	}
-	result.Message = "Success"
-	return result
 }
