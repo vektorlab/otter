@@ -6,18 +6,21 @@ import (
 	"fmt"
 )
 
+/*
+Create and validate a new File State
+ */
 func newFile(metadata Metadata, data []byte) (*File, error) {
 	file := &File{}
 	err := json.Unmarshal(data, &file)
 	if err != nil {
-		return file, err
+		return nil, err
 	}
 	file.Metadata = metadata
 	switch metadata.State {
 	case "absent":
 	case "linked":
 	case "rendered":
-	default: return file, fmt.Errorf("Invalid file state: %s", metadata.State)
+	default: return nil, fmt.Errorf("Invalid file state: %s", metadata.State)
 	}
 	if file.Path == "" {
 		file.Path = metadata.Name
@@ -26,18 +29,21 @@ func newFile(metadata Metadata, data []byte) (*File, error) {
 
 }
 
+/*
+Create and validate a new Package State
+ */
 func newPackage(metadata Metadata, data []byte) (*Package, error) {
 	pkg := &Package{}
 	err := json.Unmarshal(data, &pkg)
 	if err != nil {
-		return pkg, err
+		return nil, err
 	}
 	pkg.Metadata = metadata
 	switch metadata.State {
 	case "installed":
 	case "removed":
 	default:
-		return pkg, fmt.Errorf("Invalid package state: %s", metadata.State)
+		return nil, fmt.Errorf("Invalid package state: %s", metadata.State)
 	}
 	if pkg.Name == "" {
 		pkg.Name = metadata.Name
@@ -45,18 +51,21 @@ func newPackage(metadata Metadata, data []byte) (*Package, error) {
 	return pkg, nil
 }
 
+/*
+Create and validate a new Service State
+ */
 func newService(metadata Metadata, data []byte) (*Service, error) {
 	service := &Service{}
 	err := json.Unmarshal(data, &service)
 	if err != nil {
-		return service, err
+		return nil, err
 	}
 	service.Metadata = metadata
 	switch metadata.State {
 	case "running":
 	case "stopped":
 	default:
-		return service, fmt.Errorf("Invalid service state: %s", metadata.State)
+		return nil, fmt.Errorf("Invalid service state: %s", metadata.State)
 	}
 	if service.Name == "" {
 		service.Name = metadata.Name
