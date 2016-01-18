@@ -1,7 +1,1 @@
-FROM golang:latest
-
-COPY . /go/src/github.com/vektorlab/otter
-RUN cd /go/src/github.com/vektorlab/otter && \
-    go get -v -d
-
-RUN go install github.com/vektorlab/otter
+FROM golang:1.5.3-onbuild
