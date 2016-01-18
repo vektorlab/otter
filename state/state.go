@@ -171,7 +171,7 @@ func StateMapFromJson(data []byte) (*StateMap, error) {
 	for name, value := range raw {
 		for keyword, data := range value {
 			split := strings.Split(keyword, ".")
-			metadata := Metadata{name, split[0], split[1]}
+			metadata := Metadata{Name: name, Type: split[0], State: split[1]}
 			state, err := StateFactory(metadata, data)
 			if err != nil {
 				return sm, err

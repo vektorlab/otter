@@ -36,7 +36,7 @@ var simpleServiceMeta = Metadata{
 func stateSetup(metadata Metadata, stateBytes []byte, t *testing.T) State {
 	state, err := StateFactory(metadata, stateBytes)
 	if err != nil {
-		fmt.Println("Unable to load file: ", err)
+		fmt.Println("Unable to load state: ", err)
 		t.Fail()
 	}
 	return state

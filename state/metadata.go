@@ -6,6 +6,7 @@ type Metadata struct {
 	Name  string // Unique name to associate with a state
 	Type  string // The type of state "package", "file", etc.
 	State string // The desired state "installed", "rendered", etc.
+	Requirements []string `json:"require"`// List of dependent states.
 }
 
 func (md *Metadata) Equal(metadata *Metadata) bool {
